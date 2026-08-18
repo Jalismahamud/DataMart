@@ -28,16 +28,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if (! Auth::user()->isAdmin()) {
-            Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return redirect()->route('login')->withErrors([
-                'email' => 'Only admin users can access this area.',
-            ]);
-        }
-
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

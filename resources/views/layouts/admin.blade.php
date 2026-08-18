@@ -48,13 +48,25 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="{{ route('admin.settings.index') }}" class="nav-link">
+                                <i class="nav-icon fas fa-cogs"></i>
+                                <p>Site Settings</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.products.index') }}" class="nav-link">
                                 <i class="nav-icon fas fa-box"></i>
                                 <p>Products</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="{{ route('admin.reviews.index') }}" class="nav-link">
+                                <i class="nav-icon fas fa-star"></i>
+                                <p>Reviews</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('admin.orders.index') }}" class="nav-link">
                                 <i class="nav-icon fas fa-shopping-cart"></i>
                                 <p>Orders</p>
                             </a>
