@@ -78,37 +78,53 @@
                 @php $variations = old('variations', $product->variations ?? []); @endphp
                 @if($variations->isNotEmpty() ?? false)
                     @foreach($variations as $i => $variation)
-                        <div class="row variation-item g-3 mb-3">
-                            <div class="col-md-5">
+                        <div class="row variation-item g-3 mb-3 align-items-end">
+                            <div class="col-md-3">
                                 <label>Variation Name</label>
-                                <input type="text" name="variations[{{ $i }}][name]" class="form-control" value="{{ $variation['name'] ?? '' }}" required>
+                                <input type="text" name="variations[{{ $i }}][name]" class="form-control" value="{{ $variation['name'] ?? '' }}">
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-2">
+                                <label>Size</label>
+                                <input type="text" name="variations[{{ $i }}][size]" class="form-control" value="{{ $variation['size'] ?? '' }}" placeholder="M / L">
+                            </div>
+                            <div class="col-md-2">
+                                <label>Color</label>
+                                <input type="text" name="variations[{{ $i }}][color]" class="form-control" value="{{ $variation['color'] ?? '' }}" placeholder="Black">
+                            </div>
+                            <div class="col-md-2">
                                 <label>Price</label>
-                                <input type="number" step="0.01" name="variations[{{ $i }}][price]" class="form-control" value="{{ $variation['price'] ?? 0 }}" required>
+                                <input type="number" step="0.01" name="variations[{{ $i }}][price]" class="form-control" value="{{ $variation['price'] ?? 0 }}">
                             </div>
                             <div class="col-md-2">
                                 <label>Default</label>
                                 <div class="mt-2">
-                                    <input type="checkbox" name="variations[{{ $i }}][is_default]" value="1" {{ !empty($variation['is_default']) ? 'checked' : '' }}>
+                                    <input type="checkbox" class="default-variation-toggle" name="variations[{{ $i }}][is_default]" value="1" {{ !empty($variation['is_default']) ? 'checked' : '' }}>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 @else
-                    <div class="row variation-item g-3 mb-3">
-                        <div class="col-md-5">
+                    <div class="row variation-item g-3 mb-3 align-items-end">
+                        <div class="col-md-3">
                             <label>Variation Name</label>
-                            <input type="text" name="variations[0][name]" class="form-control" value="" required>
+                            <input type="text" name="variations[0][name]" class="form-control" value="Default" placeholder="Full Set">
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-2">
+                            <label>Size</label>
+                            <input type="text" name="variations[0][size]" class="form-control" value="M" placeholder="M / L">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Color</label>
+                            <input type="text" name="variations[0][color]" class="form-control" value="Black" placeholder="Black">
+                        </div>
+                        <div class="col-md-2">
                             <label>Price</label>
-                            <input type="number" step="0.01" name="variations[0][price]" class="form-control" value="0" required>
+                            <input type="number" step="0.01" name="variations[0][price]" class="form-control" value="0">
                         </div>
                         <div class="col-md-2">
                             <label>Default</label>
                             <div class="mt-2">
-                                <input type="checkbox" name="variations[0][is_default]" value="1" checked>
+                                <input type="checkbox" class="default-variation-toggle" name="variations[0][is_default]" value="1" checked>
                             </div>
                         </div>
                     </div>
@@ -125,27 +141,55 @@
 <script>
     let variationIndex = {{ count(old('variations', $product->variations ?? [])) ?: 1 }};
 
+    const enforceSingleDefault = () => {
+        const toggles = document.querySelectorAll('.default-variation-toggle');
+        toggles.forEach((toggle) => {
+            toggle.addEventListener('change', function () {
+                if (!this.checked) {
+                    return;
+                }
+
+                toggles.forEach((other) => {
+                    if (other !== this) {
+                        other.checked = false;
+                    }
+                });
+            });
+        });
+    };
+
+    enforceSingleDefault();
+
     document.getElementById('add-variation')?.addEventListener('click', function () {
         const wrapper = document.getElementById('variations-wrapper');
         const row = document.createElement('div');
-        row.className = 'row variation-item g-3 mb-3';
+        row.className = 'row variation-item g-3 mb-3 align-items-end';
         row.innerHTML = `
-            <div class="col-md-5">
+            <div class="col-md-3">
                 <label>Variation Name</label>
-                <input type="text" name="variations[${variationIndex}][name]" class="form-control" required>
+                <input type="text" name="variations[${variationIndex}][name]" class="form-control" placeholder="Full Set">
             </div>
-            <div class="col-md-5">
+            <div class="col-md-2">
+                <label>Size</label>
+                <input type="text" name="variations[${variationIndex}][size]" class="form-control" placeholder="M / L">
+            </div>
+            <div class="col-md-2">
+                <label>Color</label>
+                <input type="text" name="variations[${variationIndex}][color]" class="form-control" placeholder="Black">
+            </div>
+            <div class="col-md-2">
                 <label>Price</label>
-                <input type="number" step="0.01" name="variations[${variationIndex}][price]" class="form-control" value="0" required>
+                <input type="number" step="0.01" name="variations[${variationIndex}][price]" class="form-control" value="0">
             </div>
             <div class="col-md-2">
                 <label>Default</label>
                 <div class="mt-2">
-                    <input type="checkbox" name="variations[${variationIndex}][is_default]" value="1">
+                    <input type="checkbox" class="default-variation-toggle" name="variations[${variationIndex}][is_default]" value="1">
                 </div>
             </div>
         `;
         wrapper.appendChild(row);
+        enforceSingleDefault();
         variationIndex++;
     });
 </script>

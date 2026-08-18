@@ -10,18 +10,16 @@
         <table class="table table-striped mb-0">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Rating</th>
-                    <th>Status</th>
+                    <th>Image</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($reviews as $review)
                     <tr>
-                        <td>{{ $review->name }}</td>
-                        <td>{{ $review->rating }} / 5</td>
-                        <td>{{ $review->is_active ? 'Active' : 'Inactive' }}</td>
+                        <td>
+                            <img src="{{  asset('images/reviews/' . $review->image) }}" alt="Product Review" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                        </td>
                         <td>
                             <a href="{{ route('admin.reviews.edit', $review) }}" class="btn btn-sm btn-warning">Edit</a>
                             <form action="{{ route('admin.reviews.destroy', $review) }}" method="POST" class="d-inline">

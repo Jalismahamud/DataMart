@@ -1,6 +1,7 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+    <div class="text-center mb-6">
+        <h2 class="text-2xl font-black text-[#2b1d12]">পাসওয়ার্ড রিসেট</h2>
+        <p class="text-sm text-slate-500 mt-1">আপনার ইমেইল ঠিকানা দিয়ে আমরা রিসেট লিঙ্ক পাঠাব</p>
     </div>
 
     <!-- Session Status -->
@@ -10,16 +11,26 @@
         @csrf
 
         <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="mb-4">
+            <x-input-label for="email" :value="__('Email Address')" class="text-[#2b1d12] font-semibold text-sm" />
+            <x-text-input id="email" 
+                class="block mt-2 w-full px-4 py-2 border border-[#dcc6ac] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#d97706] focus:border-transparent" 
+                type="email" 
+                name="email" 
+                :value="old('email')" 
+                required 
+                autofocus 
+                placeholder="admin@example.com" />
+            <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-600 text-sm" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
+        <div class="flex items-center justify-between mt-6">
+            <a href="{{ route('login') }}" class="text-sm text-[#d97706] hover:text-[#b85e00] font-medium">
+                {{ __('ফিরে যান') }}
+            </a>
+            <button type="submit" class="px-6 py-2 bg-[#d97706] text-white font-semibold rounded-lg hover:bg-[#b85e00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d97706] focus:ring-offset-2">
+                {{ __('রিসেট লিঙ্ক পাঠান') }}
+            </button>
         </div>
     </form>
 </x-guest-layout>

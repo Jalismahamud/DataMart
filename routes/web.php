@@ -6,6 +6,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/api/product/{product}/colors-by-size', [HomeController::class, 'getColorsBySize'])->name('api.colors-by-size');
+Route::get('/api/product/{product}/variation-id', [HomeController::class, 'getVariationId'])->name('api.variation-id');
 Route::post('/order', [FrontendOrderController::class, 'store'])->name('order.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {

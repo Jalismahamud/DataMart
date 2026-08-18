@@ -10,11 +10,8 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('text');
             $table->string('image')->nullable();
             $table->unsignedTinyInteger('rating')->default(5);
-            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

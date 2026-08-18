@@ -19,6 +19,7 @@ class SiteSettingController extends Controller
     {
         $data = $request->validate([
             'site_name' => ['nullable', 'string'],
+            'site_logo' => ['nullable', 'string'],
             'phone' => ['nullable', 'string'],
             'email' => ['nullable', 'email'],
             'address' => ['nullable', 'string'],
@@ -28,6 +29,7 @@ class SiteSettingController extends Controller
             'delivery_outside_dhaka' => ['nullable', 'numeric'],
             'hero_title' => ['nullable', 'string'],
             'hero_subtitle' => ['nullable', 'string'],
+            'hero_badge' => ['nullable', 'string'],
             'hero_image' => ['nullable', 'string'],
         ]);
 
