@@ -19,14 +19,23 @@ class ProductController extends Controller
 
     public function create()
     {
+        $product = Product::first();
+
+        if ($product) {
+            return redirect()->route('admin.products.edit', $product);
+        }
+
         return view('admin.products.form', ['product' => new Product()]);
     }
 
     public function store(Request $request)
     {
+        if (Product::exists()) {
+            return redirect()->route('admin.products.edit', Product::first())->with('warning', 'Only one product is allowed. Update the existing product instead.');
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'short_description' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'base_price' => ['nullable', 'numeric'],
             'regular_price' => ['nullable', 'numeric'],
@@ -36,6 +45,7 @@ class ProductController extends Controller
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'variations' => ['nullable', 'array'],
             'variations.*.name' => ['nullable', 'string'],
+            'variations.*.short_description' => ['nullable', 'string', 'max:255'],
             'variations.*.price' => ['nullable', 'numeric'],
             'variations.*.regular_price' => ['nullable', 'numeric'],
             'variations.*.discount_price' => ['nullable', 'numeric'],
@@ -50,7 +60,6 @@ class ProductController extends Controller
         $product = Product::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
-            'short_description' => $validated['short_description'] ?? null,
             'description' => $validated['description'] ?? null,
             'base_price' => $regularPrice,
             'regular_price' => $regularPrice,
@@ -66,6 +75,7 @@ class ProductController extends Controller
         foreach ($variationRecords as $variation) {
             $created = $product->variations()->create([
                 'name' => $variation['name'],
+                'short_description' => $variation['short_description'] ?? null,
                 'price' => $variation['price'],
                 'regular_price' => $variation['regular_price'],
                 'discount_price' => $variation['discount_price'],
@@ -93,7 +103,6 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'short_description' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'base_price' => ['nullable', 'numeric'],
             'regular_price' => ['nullable', 'numeric'],
@@ -103,6 +112,7 @@ class ProductController extends Controller
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'variations' => ['nullable', 'array'],
             'variations.*.name' => ['nullable', 'string'],
+            'variations.*.short_description' => ['nullable', 'string', 'max:255'],
             'variations.*.price' => ['nullable', 'numeric'],
             'variations.*.regular_price' => ['nullable', 'numeric'],
             'variations.*.discount_price' => ['nullable', 'numeric'],
@@ -117,7 +127,6 @@ class ProductController extends Controller
         $product->update([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
-            'short_description' => $validated['short_description'] ?? null,
             'description' => $validated['description'] ?? null,
             'base_price' => $regularPrice,
             'regular_price' => $regularPrice,
@@ -146,6 +155,7 @@ class ProductController extends Controller
         foreach ($variationRecords as $variation) {
             $created = $product->variations()->create([
                 'name' => $variation['name'],
+                'short_description' => $variation['short_description'] ?? null,
                 'price' => $variation['price'],
                 'regular_price' => $variation['regular_price'],
                 'discount_price' => $variation['discount_price'],
@@ -184,6 +194,7 @@ class ProductController extends Controller
 
         foreach ($variations as $variation) {
             $name = trim((string) ($variation['name'] ?? ''));
+            $shortDescription = trim((string) ($variation['short_description'] ?? ''));
             $size = trim((string) ($variation['size'] ?? ''));
             $color = trim((string) ($variation['color'] ?? ''));
             $price = (float) ($variation['price'] ?? $fallbackPrice);
@@ -191,12 +202,13 @@ class ProductController extends Controller
             $discountPrice = $variation['discount_price'] ?? null;
             $isDefault = !empty($variation['is_default']);
 
-            if ($name === '' && $size === '' && $color === '' && $price <= 0) {
+            if ($name === '' && $shortDescription === '' && $size === '' && $color === '' && $price <= 0) {
                 continue;
             }
 
             $filtered[] = [
                 'name' => $name !== '' ? $name : ($size !== '' || $color !== '' ? trim($size . ' ' . $color) : 'Variation'),
+                'short_description' => $shortDescription !== '' ? $shortDescription : null,
                 'price' => $price,
                 'regular_price' => $regularPrice,
                 'discount_price' => $discountPrice !== null && $discountPrice !== '' ? (float) $discountPrice : null,
@@ -208,7 +220,8 @@ class ProductController extends Controller
 
         if (empty($filtered)) {
             return [[
-                'name' => 'Default',
+                'name' => 'Full Set',
+                'short_description' => 'Premium full coverage set',
                 'price' => $fallbackPrice,
                 'regular_price' => $fallbackPrice,
                 'discount_price' => null,

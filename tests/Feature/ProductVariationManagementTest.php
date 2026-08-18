@@ -15,7 +15,6 @@ class ProductVariationManagementTest extends TestCase
         $product = Product::create([
             'name' => 'Premium Borka',
             'slug' => 'premium-borka',
-            'short_description' => 'Premium quality',
             'regular_price' => 2000,
             'discount_price' => 1800,
             'is_active' => true,
@@ -23,6 +22,7 @@ class ProductVariationManagementTest extends TestCase
 
         $product->variations()->create([
             'name' => 'Full Set',
+            'short_description' => 'Premium full coverage set',
             'price' => 1800,
             'regular_price' => 2000,
             'discount_price' => 1800,
@@ -32,13 +32,14 @@ class ProductVariationManagementTest extends TestCase
         ]);
 
         $product->variations()->create([
-            'name' => 'Full Set',
-            'price' => 1800,
-            'regular_price' => 2000,
-            'discount_price' => 1800,
+            'name' => 'Without Hijab',
+            'short_description' => 'Modern design without hijab',
+            'price' => 1600,
+            'regular_price' => 1800,
+            'discount_price' => 1600,
             'size' => 'L',
             'color' => 'White',
-            'is_default' => true,
+            'is_default' => false,
         ]);
 
         $product->syncDefaultVariation($product->variations()->where('size', 'L')->first()->id);
@@ -56,5 +57,26 @@ class ProductVariationManagementTest extends TestCase
         ]);
 
         $this->assertSame(1, $product->fresh()->variations()->where('is_default', true)->count());
+    }
+
+    public function test_only_one_product_record_can_exist(): void
+    {
+        Product::create([
+            'name' => 'Premium Borka',
+            'slug' => 'premium-borka',
+            'regular_price' => 2000,
+            'discount_price' => 1800,
+            'is_active' => true,
+        ]);
+
+        $this->expectException(\RuntimeException::class);
+
+        Product::create([
+            'name' => 'Premium Borka 2',
+            'slug' => 'premium-borka-2',
+            'regular_price' => 2200,
+            'discount_price' => 1900,
+            'is_active' => true,
+        ]);
     }
 }

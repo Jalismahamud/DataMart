@@ -9,7 +9,6 @@ class Product extends Model
     protected $fillable = [
         'name',
         'slug',
-        'short_description',
         'description',
         'base_price',
         'regular_price',
@@ -22,6 +21,15 @@ class Product extends Model
         'is_active' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $product) {
+            if (self::query()->exists()) {
+                throw new \RuntimeException('Only one product is allowed. Update the existing product instead of creating a new one.');
+            }
+        });
+    }
+
     public function variations()
     {
         return $this->hasMany(ProductVariation::class);
@@ -32,7 +40,7 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
-    public function defaultVariation()
+    public function getDefaultVariation()
     {
         return $this->variations()->where('is_default', true)->first()
             ?? $this->variations()->first();
