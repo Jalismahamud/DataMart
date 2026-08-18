@@ -10,6 +10,10 @@ class ProductVariation extends Model
         'product_id',
         'name',
         'price',
+        'regular_price',
+        'discount_price',
+        'size',
+        'color',
         'is_default',
     ];
 
@@ -20,5 +24,13 @@ class ProductVariation extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function getEffectivePriceAttribute(): float
+    {
+        $regularPrice = (float) ($this->regular_price ?? $this->price ?? 0);
+        $discountPrice = (float) ($this->discount_price ?? 0);
+
+        return $discountPrice > 0 && $discountPrice < $regularPrice ? $discountPrice : $regularPrice;
     }
 }

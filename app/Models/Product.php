@@ -12,6 +12,8 @@ class Product extends Model
         'short_description',
         'description',
         'base_price',
+        'regular_price',
+        'discount_price',
         'featured_image',
         'is_active',
     ];
@@ -23,5 +25,24 @@ class Product extends Model
     public function variations()
     {
         return $this->hasMany(ProductVariation::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    public function defaultVariation()
+    {
+        return $this->variations()->where('is_default', true)->first()
+            ?? $this->variations()->first();
+    }
+
+    public function getEffectivePriceAttribute(): float
+    {
+        $regularPrice = (float) ($this->regular_price ?? $this->base_price ?? 0);
+        $discountPrice = (float) ($this->discount_price ?? 0);
+
+        return $discountPrice > 0 && $discountPrice < $regularPrice ? $discountPrice : $regularPrice;
     }
 }

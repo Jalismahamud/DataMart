@@ -15,6 +15,8 @@ return new class extends Migration
             $table->string('short_description')->nullable();
             $table->text('description')->nullable();
             $table->decimal('base_price', 10, 2)->default(0);
+            $table->decimal('regular_price', 10, 2)->default(0);
+            $table->decimal('discount_price', 10, 2)->nullable();
             $table->string('featured_image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
@@ -25,6 +27,10 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->decimal('price', 10, 2);
+            $table->decimal('regular_price', 10, 2)->nullable();
+            $table->decimal('discount_price', 10, 2)->nullable();
+            $table->string('size')->nullable();
+            $table->string('color')->nullable();
             $table->boolean('is_default')->default(false);
             $table->timestamps();
         });

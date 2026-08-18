@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Review;
 use Illuminate\Http\Request;
+use File;
 
 class ReviewController extends Controller
 {
@@ -23,16 +24,25 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'text' => ['required', 'string'],
-            'image' => ['nullable', 'string'],
-            'rating' => ['nullable', 'integer', 'min:1', 'max:5'],
-            'is_active' => ['nullable', 'boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        Review::create($validated);
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $uploadDir = public_path('images/reviews');
+            if (!File::exists($uploadDir)) {
+                File::makeDirectory($uploadDir, 0755, true);
+            }
+            $fileName = time() . '_' . uniqid() . '.' . $request->file('image')->getClientOriginalExtension();
+            $request->file('image')->move($uploadDir, $fileName);
+            $imagePath = $fileName;
+        }
 
-        return redirect()->route('admin.reviews.index')->with('success', 'Review created successfully.');
+        Review::create([
+            'image' => $imagePath,
+        ]);
+
+        return redirect()->route('admin.reviews.index')->with('success', 'Review image uploaded successfully.');
     }
 
     public function edit(Review $review)
@@ -43,20 +53,45 @@ class ReviewController extends Controller
     public function update(Request $request, Review $review)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'text' => ['required', 'string'],
-            'image' => ['nullable', 'string'],
-            'rating' => ['nullable', 'integer', 'min:1', 'max:5'],
-            'is_active' => ['nullable', 'boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $review->update($validated);
+        $imagePath = $review->image;
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($imagePath) {
+                $oldPath = public_path('images/reviews/' . $imagePath);
+                if (File::exists($oldPath)) {
+                    File::delete($oldPath);
+                }
+            }
 
-        return redirect()->route('admin.reviews.index')->with('success', 'Review updated successfully.');
+            // Upload new image
+            $uploadDir = public_path('images/reviews');
+            if (!File::exists($uploadDir)) {
+                File::makeDirectory($uploadDir, 0755, true);
+            }
+            $fileName = time() . '_' . uniqid() . '.' . $request->file('image')->getClientOriginalExtension();
+            $request->file('image')->move($uploadDir, $fileName);
+            $imagePath = $fileName;
+        }
+
+        $review->update([
+            'image' => $imagePath,
+        ]);
+
+        return redirect()->route('admin.reviews.index')->with('success', 'Review image updated successfully.');
     }
 
     public function destroy(Review $review)
     {
+        if ($review->image) {
+            $imagePath = public_path('images/reviews/' . $review->image);
+            if (File::exists($imagePath)) {
+                File::delete($imagePath);
+            }
+        }
+
         $review->delete();
 
         return redirect()->route('admin.reviews.index')->with('success', 'Review deleted successfully.');

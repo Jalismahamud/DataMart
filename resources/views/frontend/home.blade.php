@@ -16,7 +16,9 @@
         <div class="px-4">
             <div class="overflow-hidden rounded-[28px] border border-[#ead8c0] bg-white shadow-sm">
                 @if (!empty($products->first()?->featured_image))
-                    <img src="{{ asset('storage/' . $products->first()->featured_image) }}" alt="{{ $products->first()->name }}" class="w-full h-[420px] object-cover">
+                    <img src="{{ asset('images/products/' . $products->first()->featured_image) }}" alt="{{ $products->first()->name }}" class="w-full h-[420px] object-cover">
+                @elseif (!empty($products->first()?->images->first()?->image_path))
+                    <img src="{{ asset('images/products/' . $products->first()->images->first()->image_path) }}" alt="{{ $products->first()->name }}" class="w-full h-[420px] object-cover">
                 @else
                     <div class="w-full h-[420px] bg-gradient-to-br from-slate-200 via-stone-100 to-[#dcc6ac] flex items-center justify-center text-2xl font-bold text-[#8a5a38]">
                         Product Image
@@ -62,7 +64,7 @@
                         <div class="rounded-2xl border border-slate-200 p-3">
                             <div class="flex items-center gap-3">
                                 @if ($review->image)
-                                    <img src="{{ asset('storage/' . $review->image) }}" alt="{{ $review->name }}" class="w-14 h-14 rounded-full object-cover">
+                                    <img src="{{ asset('images/reviews/' . $review->image) }}" alt="{{ $review->name }}" class="w-14 h-14 rounded-full object-cover">
                                 @endif
                                 <div>
                                     <div class="font-bold text-[#2b1d12]">{{ $review->name }}</div>

@@ -14,6 +14,8 @@ class Order extends Model
         'delivery_zone',
         'product_id',
         'variation_id',
+        'selected_size',
+        'selected_color',
         'quantity',
         'unit_price',
         'shipping_cost',

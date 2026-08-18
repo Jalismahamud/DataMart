@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('delivery_zone');
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->foreignId('variation_id')->nullable()->constrained('product_variations')->nullOnDelete();
+            $table->string('selected_size')->nullable();
+            $table->string('selected_color')->nullable();
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('unit_price', 10, 2)->default(0);
             $table->decimal('shipping_cost', 10, 2)->default(0);
