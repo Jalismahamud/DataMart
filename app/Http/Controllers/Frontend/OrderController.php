@@ -42,7 +42,7 @@ class OrderController extends Controller
             : ($variation->regular_price ?? $variation->price));
         $total = ($unitPrice * $validated['quantity']) + $shippingCost;
 
-        Order::create([
+        $order = Order::create([
             'customer_name' => $validated['customer_name'],
             'phone' => $validated['phone'],
             'address' => $validated['address'],
@@ -60,6 +60,14 @@ class OrderController extends Controller
             'notes' => $validated['notes'] ?? null,
             'status' => 'pending',
         ]);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'message' => 'Order placed successfully.',
+                'invoice_number' => $order->invoice_number,
+                'order_id' => $order->id,
+            ], 201);
+        }
 
         return redirect()->back()->with('success', 'Order placed successfully.');
     }

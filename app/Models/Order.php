@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     protected $fillable = [
+        'invoice_number',
         'customer_name',
         'phone',
         'address',
@@ -24,6 +25,24 @@ class Order extends Model
         'notes',
         'status',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $order) {
+            if (empty($order->invoice_number)) {
+                $order->invoice_number = self::generateInvoiceNumber();
+            }
+        });
+    }
+
+    public static function generateInvoiceNumber(): string
+    {
+        do {
+            $invoice = 'INV-' . now()->format('Ymd') . '-' . strtoupper(str()->random(6));
+        } while (self::query()->where('invoice_number', $invoice)->exists());
+
+        return $invoice;
+    }
 
     public function product()
     {

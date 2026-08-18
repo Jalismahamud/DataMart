@@ -204,7 +204,14 @@
         </div>
 
         <div id="order-form" class="form-section-new">
-            <form id="checkoutForm">
+            <form id="checkoutForm" method="POST" action="{{ route('order.store') }}">
+                @csrf
+                <input type="hidden" name="product_id" id="product_id" value="{{ $firstProduct->id ?? '' }}">
+                <input type="hidden" name="variation_id" id="variation_id" value="">
+                <input type="hidden" name="selected_size" id="selected_size" value="{{ $firstSizes[0] ?? '50' }}">
+                <input type="hidden" name="selected_color" id="selected_color" value="{{ $firstColors[0] ?? 'কালো' }}">
+                <input type="hidden" name="quantity" id="quantity" value="1">
+                <input type="hidden" name="city" id="city" value="Outside Dhaka">
                 <div class="form-step">
                     <label class="step-label">① পণ্য বাছাই করুন</label>
 
@@ -273,22 +280,22 @@
                 </div>
 
                 <div class="form-group-custom">
-                    <label class="form-label-custom">④ আপনার নাম</label>
-                    <input type="text" class="form-control-custom" placeholder="আপনার নাম লিখুন..." required>
+                    <label class="form-label-custom">⑤ আপনার নাম</label>
+                    <input type="text" name="customer_name" class="form-control-custom" placeholder="আপনার নাম লিখুন..." required>
                 </div>
 
                 <div class="form-group-custom">
-                    <input type="tel" class="form-control-custom" placeholder="01XXXXXXXXX" required>
+                    <input type="tel" name="phone" class="form-control-custom" placeholder="01XXXXXXXXX" required>
                 </div>
 
                 <div class="form-group-custom">
-                    <textarea class="form-control-custom" rows="3" placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." required></textarea>
+                    <textarea name="address" class="form-control-custom" rows="3" placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." required></textarea>
                 </div>
 
                 <div class="form-step">
-                    <label class="step-label">④ ডেলিভারি এলাকা</label>
-                    <label class="product-card selected delivery-new-card" onclick="selectDelivery(this, {{ $deliveryOutside }}, 'ঢাকার বাইরে')">
-                        <input type="radio" name="delivery_area" class="d-none" value="outside" checked>
+                    <label class="step-label">⑥ ডেলিভারি এলাকা</label>
+                    <label class="product-card selected delivery-new-card" onclick="selectDelivery(this, {{ $deliveryOutside }}, 'ঢাকার বাইরে', 'Outside Dhaka')">
+                        <input type="radio" name="delivery_area" class="d-none" value="Outside Dhaka" checked>
                         <div class="d-flex align-items-center w-100">
                             <div class="delivery-icon-new">🚚</div>
                             <div class="product-details">
@@ -300,8 +307,8 @@
                             </div>
                         </div>
                     </label>
-                    <label class="product-card delivery-new-card" onclick="selectDelivery(this, {{ $deliveryInside }}, 'ঢাকার ভিতর')">
-                        <input type="radio" name="delivery_area" class="d-none" value="inside">
+                    <label class="product-card delivery-new-card" onclick="selectDelivery(this, {{ $deliveryInside }}, 'ঢাকার ভিতর', 'Dhaka')">
+                        <input type="radio" name="delivery_area" class="d-none" value="Dhaka">
                         <div class="d-flex align-items-center w-100">
                             <div class="delivery-icon-new">🏢</div>
                             <div class="product-details">
@@ -316,7 +323,7 @@
                 </div>
 
                 <div class="form-step">
-                    <label class="step-label">⑤ পেমেন্ট পদ্ধতি</label>
+                    <label class="step-label">⑦ পেমেন্ট পদ্ধতি</label>
                     <label class="product-card selected mb-0" style="cursor: default;">
                         <input type="radio" name="payment_method" class="d-none" value="cod" checked>
                         <div class="d-flex align-items-center w-100">
@@ -353,6 +360,22 @@
                     ডেলিভারি চার্জ, প্যাকেজিং সহ অনেক দিকে আর্থিক ক্ষতির সম্মুখীন হতে হয়।
                 </div>
             </form>
+        </div>
+
+        <div class="modal fade" id="orderSuccessModal" tabindex="-1" aria-labelledby="orderSuccessModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow">
+                    <div class="modal-body text-center p-4">
+                        <div class="mb-3" style="font-size: 52px;">✅</div>
+                        <h4 class="fw-bold mb-2">অর্ডার সফল হয়েছে</h4>
+                        <p class="text-muted mb-3">আপনার অর্ডারটি আমাদের কাছে গ্রহণ হয়েছে।</p>
+                        <div class="alert alert-success mb-3 rounded-3">
+                            <strong>Invoice:</strong> <span id="successInvoiceNumber">-</span>
+                        </div>
+                        <button type="button" class="btn btn-dark px-4" data-bs-dismiss="modal">ঠিক আছে</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="footer-new">

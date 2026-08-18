@@ -48,5 +48,10 @@ class OrderFlowTest extends TestCase
             'selected_size' => 'M',
             'selected_color' => 'Black',
         ]);
+
+        $order = \App\Models\Order::query()->first();
+        $this->assertNotNull($order);
+        $this->assertNotEmpty($order->invoice_number);
+        $this->assertMatchesRegularExpression('/^INV-\d{8}-[A-Z0-9]+$/', $order->invoice_number);
     }
 }

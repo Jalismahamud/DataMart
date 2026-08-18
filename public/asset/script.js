@@ -52,8 +52,65 @@ function decreaseQty() {
     }
 }
 
+function syncSelectedValues() {
+    const productRadio = document.querySelector('input[name="product"]:checked');
+    const productIdInput = document.getElementById('product_id');
+    if (productIdInput && productRadio) {
+        productIdInput.value = productRadio.value;
+    }
+
+    const sizeRadio = document.querySelector('input[name="size"]:checked');
+    const sizeInput = document.getElementById('selected_size');
+    if (sizeInput && sizeRadio) {
+        sizeInput.value = sizeRadio.value;
+    }
+
+    const colorRadio = document.querySelector('input[name="color"]:checked');
+    const colorInput = document.getElementById('selected_color');
+    if (colorInput && colorRadio) {
+        colorInput.value = colorRadio.value;
+    }
+
+    const qtyInput = document.getElementById('quantity');
+    if (qtyInput) {
+        qtyInput.value = currentQty;
+    }
+
+    const cityInput = document.getElementById('city');
+    const cityRadio = document.querySelector('input[name="delivery_area"]:checked');
+    if (cityInput && cityRadio) {
+        cityInput.value = cityRadio.value;
+    }
+}
+
+function resolveVariationId() {
+    const productInput = document.getElementById('product_id');
+    const productId = productInput ? productInput.value : null;
+    const size = document.querySelector('input[name="size"]:checked')?.value;
+    const color = document.querySelector('input[name="color"]:checked')?.value;
+
+    if (!productId || !size || !color) {
+        return Promise.resolve();
+    }
+
+    const variationInput = document.getElementById('variation_id');
+    if (!variationInput) return Promise.resolve();
+
+    return fetch(`/api/product/${productId}/variation-id?size=${encodeURIComponent(size)}&color=${encodeURIComponent(color)}`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.variation_id) {
+                variationInput.value = data.variation_id;
+            }
+            return data;
+        })
+        .catch(() => {
+            variationInput.value = '';
+            return null;
+        });
+}
+
 function selectProduct(element, price) {
-    // Remove selected class and reset indicators from all sibling product cards
     const cards = element.parentElement.querySelectorAll('.product-card');
     cards.forEach(card => {
         card.classList.remove('selected');
@@ -63,64 +120,58 @@ function selectProduct(element, price) {
             indicator.innerHTML = '';
         }
     });
-    
-    // Add selected class to clicked
+
     element.classList.add('selected');
     const indicator = element.querySelector('.radio-indicator');
     if(indicator) {
         indicator.classList.remove('empty');
         indicator.innerHTML = '<i class="fa-solid fa-check"></i>';
     }
-    
-    // Check the radio input
+
     const radio = element.querySelector('input[type="radio"]');
     if (radio) radio.checked = true;
 
-    // Update base price
     basePrice = price;
-    
-    // Update summary product name
     const prodName = element.querySelector('h5');
     const summaryProdName = document.getElementById('summaryProductName');
     if(prodName && summaryProdName) {
         summaryProdName.textContent = prodName.textContent;
     }
-    
+
+    syncSelectedValues();
+    resolveVariationId();
     updateSummary();
 }
 
 function selectSize(element) {
-    // Remove active class from all sibling size boxes
     const boxes = element.parentElement.querySelectorAll('.size-box');
     boxes.forEach(box => box.classList.remove('active'));
-    
-    // Add active class to clicked
     element.classList.add('active');
-    
-    // Check the radio input
+
     const radio = element.querySelector('input[type="radio"]');
     if (radio) {
         radio.checked = true;
     }
+
+    syncSelectedValues();
+    resolveVariationId();
 }
 
 function selectColor(element) {
-    // Remove active class from all sibling color boxes
     const boxes = element.parentElement.querySelectorAll('.size-box');
     boxes.forEach(box => box.classList.remove('active'));
-    
-    // Add active class to clicked
     element.classList.add('active');
-    
-    // Check the radio input
+
     const radio = element.querySelector('input[type="radio"]');
     if (radio) {
         radio.checked = true;
     }
+
+    syncSelectedValues();
+    resolveVariationId();
 }
 
-function selectDelivery(element, price, text) {
-    // Remove selected class from all
+function selectDelivery(element, price, text, cityValue) {
     const cards = document.querySelectorAll('.delivery-new-card');
     cards.forEach(card => {
         card.classList.remove('selected');
@@ -130,36 +181,82 @@ function selectDelivery(element, price, text) {
             indicator.innerHTML = '';
         }
     });
-    
-    // Add selected class to clicked
+
     element.classList.add('selected');
     const indicator = element.querySelector('.radio-indicator');
     if(indicator) {
         indicator.classList.remove('empty');
         indicator.innerHTML = '<i class="fa-solid fa-check"></i>';
     }
-    
-    // Check the radio input
+
     const radio = element.querySelector('input[type="radio"]');
     if (radio) {
         radio.checked = true;
     }
 
-    // Update price and text
     currentDelivery = price;
     const summaryText = document.getElementById('summaryDeliveryText');
     if(summaryText && text) {
         summaryText.textContent = text;
     }
-    
+
+    const cityInput = document.getElementById('city');
+    if (cityInput && cityValue) {
+        cityInput.value = cityValue;
+    }
+
     updateSummary();
 }
 
-// Handle form submission
-document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    alert('Thank you! Your order has been placed successfully.');
-    // Here you would typically send data to server
+
+    syncSelectedValues();
+    const form = e.currentTarget;
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="me-2">⏳</span> অর্ডার প্রক্রিয়াধীন...';
+    }
+
+    try {
+        await resolveVariationId();
+
+        const formData = new FormData(form);
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]').value
+            },
+            body: formData
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Order failed. Please try again.');
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('orderSuccessModal'));
+        const invoiceEl = document.getElementById('successInvoiceNumber');
+        if (invoiceEl) {
+            invoiceEl.textContent = data.invoice_number || '—';
+        }
+        modal.show();
+        form.reset();
+        document.getElementById('qty').value = '১';
+        currentQty = 1;
+        updateSummary();
+    } catch (error) {
+        alert(error.message || 'Something went wrong while placing your order.');
+    } finally {
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fa-solid fa-cart-shopping"></i> অর্ডার কনফার্ম করুন';
+        }
+    }
 });
 // Enable swipe and mouse drag support for all carousels
 document.addEventListener('DOMContentLoaded', function() {

@@ -17,4 +17,5 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::resource('products', ProductController::class);
     Route::resource('reviews', ReviewController::class);
     Route::resource('orders', AdminOrderController::class)->only(['index', 'show']);
+    Route::get('/orders/{order}/print', [AdminOrderController::class, 'print'])->name('orders.print');
 });
