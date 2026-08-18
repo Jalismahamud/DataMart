@@ -210,8 +210,9 @@
 
                     @foreach ($productList as $index => $product)
                         @php
-                            $productDefault = method_exists($product, 'getDefaultVariation') ? $product->getDefaultVariation() : null;
+                            $productDefault = method_exists($product, 'getDefaultVariation') ? $product->getDefaultVariation() : ($product->defaultVariation ?? null);
                             $productPrice = (float) (($productDefault->discount_price ?? 0) > 0 ? ($productDefault->discount_price ?? $productDefault->price) : ($productDefault->price ?? $product->base_price ?? 2550));
+                            $productDescription = $productDefault->short_description ?? $product->description ?? 'Premium product';
                         @endphp
                         <label class="product-card {{ $index === 0 ? 'selected' : '' }}" onclick="selectProduct(this, {{ $productPrice }})">
                             @if ($index === 0)
@@ -222,7 +223,7 @@
                                 <div class="product-icon">⭐</div>
                                 <div class="product-details">
                                     <h5>{{ $product->name ?? 'ফুল সেট বোরকা' }}</h5>
-                                    <p>{{ \Illuminate\Support\Str::limit($product->short_description ?? 'Premium product', 70) }}</p>
+                                    <p>{{ \Illuminate\Support\Str::limit($productDescription, 70) }}</p>
                                 </div>
                                 <div class="product-right">
                                     <div class="product-price">৳{{ number_format($productPrice, 0, '.', ',') }}</div>

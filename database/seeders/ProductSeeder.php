@@ -15,7 +15,6 @@ class ProductSeeder extends Seeder
             ['slug' => 'full-set-borka'],
             [
                 'name' => 'ফুল সেট বোরকা',
-                'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার',
                 'description' => 'প্রিমিয়াম ডিজিটাল প্রিন্ট বোরকা ও হিজাব সেট। সম্পূর্ণ নতুন কালেকশন, আরামদায়ক কাপড়, আলংকারিক লেস ওয়ার্ক ও ফিট ও ফ্লোয়িং ডিজাইন।',
                 'base_price' => 3000,
                 'regular_price' => 3000,
@@ -33,6 +32,7 @@ class ProductSeeder extends Seeder
                 foreach ($colors as $colorIndex => $color) {
                     $product->variations()->create([
                         'name' => 'ফুল সেট',
+                        'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার',
                         'price' => 2550,
                         'regular_price' => 3000,
                         'discount_price' => 2550,

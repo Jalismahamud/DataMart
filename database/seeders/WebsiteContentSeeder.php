@@ -40,7 +40,6 @@ class WebsiteContentSeeder extends Seeder
             ['slug' => 'full-set-borka'],
             [
                 'name' => 'ফুল সেট বোরকা',
-                'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার',
                 'description' => 'প্রিমিয়াম ডিজিটাল প্রিন্ট বোরকা ও হিজাব সেট।',
                 'base_price' => 3000,
                 'regular_price' => 3000,
@@ -52,14 +51,15 @@ class WebsiteContentSeeder extends Seeder
 
         if ($product->variations()->count() === 0) {
             $variations = [
-                ['name' => 'ফুল সেট', 'size' => '৫০', 'color' => 'কালো', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => true],
-                ['name' => 'ফুল সেট', 'size' => '৫২', 'color' => 'মেরুন', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => false],
-                ['name' => 'ফুল সেট', 'size' => '৫৪', 'color' => 'অলিভ', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => false],
+                ['name' => 'ফুল সেট', 'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার', 'size' => '৫০', 'color' => 'কালো', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => true],
+                ['name' => 'ফুল সেট', 'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার', 'size' => '৫২', 'color' => 'মেরুন', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => false],
+                ['name' => 'ফুল সেট', 'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার', 'size' => '৫৪', 'color' => 'অলিভ', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => false],
             ];
 
             foreach ($variations as $variation) {
                 $product->variations()->create([
                     'name' => $variation['name'],
+                    'short_description' => $variation['short_description'],
                     'size' => $variation['size'],
                     'color' => $variation['color'],
                     'price' => $variation['price'],
