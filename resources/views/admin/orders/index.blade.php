@@ -31,7 +31,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($orders as $order)
+                    @forelse ($orders as $order)
                         <tr>
                             <td>{{ $order->invoice_number ?? '—' }}</td>
                             <td>{{ $order->customer_name }}</td>
@@ -44,10 +44,20 @@
                                 <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-info">View</a>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No orders found.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if ($orders->hasPages())
+            <div class="d-flex justify-content-end mt-3">
+                {{ $orders->appends(['search' => request('search')])->links() }}
+            </div>
+        @endif
     </div>
 </div>
 @endsection

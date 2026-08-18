@@ -10,17 +10,18 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
+        $search = trim($request->input('search', ''));
+
         $query = Order::with(['product', 'variation'])->latest();
 
-        if ($request->filled('search')) {
-            $search = trim($request->search);
+        if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_number', 'like', '%' . $search . '%')
                   ->orWhere('phone', 'like', '%' . $search . '%');
             });
         }
 
-        $orders = $query->get();
+        $orders = $query->paginate(15)->appends(['search' => $search]);
 
         return view('admin.orders.index', compact('orders', 'search'));
     }
