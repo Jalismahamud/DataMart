@@ -20,14 +20,17 @@ class ProductVariationManagementTest extends TestCase
             'is_active' => true,
         ]);
 
+        $product->sizes()->create(['size' => 'M']);
+        $product->sizes()->create(['size' => 'L']);
+        $product->colors()->create(['color' => 'Black']);
+        $product->colors()->create(['color' => 'White']);
+
         $product->variations()->create([
             'name' => 'Full Set',
             'short_description' => 'Premium full coverage set',
             'price' => 1800,
             'regular_price' => 2000,
             'discount_price' => 1800,
-            'size' => 'M',
-            'color' => 'Black',
             'is_default' => true,
         ]);
 
@@ -37,25 +40,20 @@ class ProductVariationManagementTest extends TestCase
             'price' => 1600,
             'regular_price' => 1800,
             'discount_price' => 1600,
-            'size' => 'L',
-            'color' => 'White',
             'is_default' => false,
         ]);
 
-        $product->syncDefaultVariation($product->variations()->where('size', 'L')->first()->id);
-
-        $this->assertDatabaseHas('product_variations', [
+        $this->assertDatabaseHas('product_sizes', [
             'product_id' => $product->id,
             'size' => 'M',
+        ]);
+
+        $this->assertDatabaseHas('product_colors', [
+            'product_id' => $product->id,
             'color' => 'Black',
         ]);
 
-        $this->assertDatabaseHas('product_variations', [
-            'product_id' => $product->id,
-            'size' => 'L',
-            'color' => 'White',
-        ]);
-
+        $this->assertSame(2, $product->fresh()->variations()->count());
         $this->assertSame(1, $product->fresh()->variations()->where('is_default', true)->count());
     }
 

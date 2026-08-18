@@ -21,11 +21,12 @@ class OrderFlowTest extends TestCase
             'is_active' => true,
         ]);
 
+        $product->sizes()->create(['size' => 'M']);
+        $product->colors()->create(['color' => 'Black']);
+
         $variation = $product->variations()->create([
             'name' => 'Full Set',
             'price' => 1800,
-            'size' => 'M',
-            'color' => 'Black',
             'is_default' => true,
         ]);
 

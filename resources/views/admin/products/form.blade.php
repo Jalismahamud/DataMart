@@ -62,6 +62,19 @@
 
             <hr class="my-4">
 
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label>Available Sizes</label>
+                    <input type="text" name="sizes" class="form-control" value="{{ old('sizes', $product->sizes->pluck('size')->implode(', ')) }}" placeholder="e.g. 50, 52, 54, 56">
+                    <small class="text-muted">Use comma-separated values</small>
+                </div>
+                <div class="col-md-6">
+                    <label>Available Colors</label>
+                    <input type="text" name="colors" class="form-control" value="{{ old('colors', $product->colors->pluck('color')->implode(', ')) }}" placeholder="e.g. Black, Maroon, Olive">
+                    <small class="text-muted">Use comma-separated values</small>
+                </div>
+            </div>
+
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Product Variations</h5>
                 <button type="button" class="btn btn-outline-primary btn-sm" id="add-variation">Add Variation</button>
@@ -72,21 +85,13 @@
                 @if($variations && count($variations))
                     @foreach($variations as $i => $variation)
                         <div class="row variation-item g-3 mb-3 align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label>Variation Name</label>
                                 <input type="text" name="variations[{{ $i }}][name]" class="form-control" value="{{ $variation['name'] ?? '' }}" placeholder="Full Set">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-5">
                                 <label>Short Description</label>
                                 <input type="text" name="variations[{{ $i }}][short_description]" class="form-control" value="{{ $variation['short_description'] ?? '' }}" placeholder="Premium full coverage set">
-                            </div>
-                            <div class="col-md-1">
-                                <label>Size</label>
-                                <input type="text" name="variations[{{ $i }}][size]" class="form-control" value="{{ $variation['size'] ?? '' }}" placeholder="50">
-                            </div>
-                            <div class="col-md-1">
-                                <label>Color</label>
-                                <input type="text" name="variations[{{ $i }}][color]" class="form-control" value="{{ $variation['color'] ?? '' }}" placeholder="Black">
                             </div>
                             <div class="col-md-2">
                                 <label>Price</label>
@@ -98,28 +103,20 @@
                                     <input type="checkbox" class="default-variation-toggle" name="variations[{{ $i }}][is_default]" value="1" {{ !empty($variation['is_default']) ? 'checked' : '' }}>
                                 </div>
                             </div>
-                            <div class="col-md-1 text-end">
+                            <div class="col-12 text-end">
                                 <button type="button" class="btn btn-outline-danger btn-sm remove-variation">Remove</button>
                             </div>
                         </div>
                     @endforeach
                 @else
                     <div class="row variation-item g-3 mb-3 align-items-end">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label>Variation Name</label>
                             <input type="text" name="variations[0][name]" class="form-control" value="Full Set" placeholder="Full Set">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-5">
                             <label>Short Description</label>
                             <input type="text" name="variations[0][short_description]" class="form-control" value="Premium full coverage set" placeholder="Premium full coverage set">
-                        </div>
-                        <div class="col-md-1">
-                            <label>Size</label>
-                            <input type="text" name="variations[0][size]" class="form-control" value="50" placeholder="50">
-                        </div>
-                        <div class="col-md-1">
-                            <label>Color</label>
-                            <input type="text" name="variations[0][color]" class="form-control" value="Black" placeholder="Black">
                         </div>
                         <div class="col-md-2">
                             <label>Price</label>
@@ -131,7 +128,7 @@
                                 <input type="checkbox" class="default-variation-toggle" name="variations[0][is_default]" value="1" checked>
                             </div>
                         </div>
-                        <div class="col-md-1 text-end">
+                        <div class="col-12 text-end">
                             <button type="button" class="btn btn-outline-danger btn-sm remove-variation">Remove</button>
                         </div>
                     </div>
@@ -184,21 +181,13 @@
         const row = document.createElement('div');
         row.className = 'row variation-item g-3 mb-3 align-items-end';
         row.innerHTML = `
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label>Variation Name</label>
                 <input type="text" name="variations[${variationIndex}][name]" class="form-control" placeholder="Full Set">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-5">
                 <label>Short Description</label>
                 <input type="text" name="variations[${variationIndex}][short_description]" class="form-control" placeholder="Premium full coverage set">
-            </div>
-            <div class="col-md-1">
-                <label>Size</label>
-                <input type="text" name="variations[${variationIndex}][size]" class="form-control" placeholder="50">
-            </div>
-            <div class="col-md-1">
-                <label>Color</label>
-                <input type="text" name="variations[${variationIndex}][color]" class="form-control" placeholder="Black">
             </div>
             <div class="col-md-2">
                 <label>Price</label>
@@ -210,7 +199,7 @@
                     <input type="checkbox" class="default-variation-toggle" name="variations[${variationIndex}][is_default]" value="1">
                 </div>
             </div>
-            <div class="col-md-1 text-end">
+            <div class="col-12 text-end">
                 <button type="button" class="btn btn-outline-danger btn-sm remove-variation">Remove</button>
             </div>
         `;

@@ -30,6 +30,16 @@ class Product extends Model
         });
     }
 
+    public function sizes()
+    {
+        return $this->hasMany(ProductSize::class);
+    }
+
+    public function colors()
+    {
+        return $this->hasMany(ProductColor::class);
+    }
+
     public function variations()
     {
         return $this->hasMany(ProductVariation::class);
@@ -71,9 +81,7 @@ class Product extends Model
 
     public function getUniqueSizes()
     {
-        return $this->variations()
-            ->whereNotNull('size')
-            ->distinct()
+        return $this->sizes()
             ->pluck('size')
             ->filter()
             ->unique()
@@ -83,10 +91,7 @@ class Product extends Model
 
     public function getColorsBySize($size)
     {
-        return $this->variations()
-            ->where('size', $size)
-            ->whereNotNull('color')
-            ->distinct()
+        return $this->colors()
             ->pluck('color')
             ->filter()
             ->unique()
@@ -96,9 +101,6 @@ class Product extends Model
 
     public function getVariationByAttributes($size, $color)
     {
-        return $this->variations()
-            ->where('size', $size)
-            ->where('color', $color)
-            ->first();
+        return null;
     }
 }

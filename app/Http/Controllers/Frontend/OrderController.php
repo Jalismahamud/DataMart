@@ -19,17 +19,17 @@ class OrderController extends Controller
             'address' => ['required', 'string'],
             'city' => ['required', 'string'],
             'product_id' => ['required', 'exists:products,id'],
-            'variation_id' => ['required', 'exists:product_variations,id'],
-            'selected_size' => ['nullable', 'string', 'max:50'],
-            'selected_color' => ['nullable', 'string', 'max:50'],
+            'variation_id' => ['nullable', 'exists:product_variations,id'],
+            'selected_size' => ['required', 'string', 'max:50'],
+            'selected_color' => ['required', 'string', 'max:50'],
             'quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string'],
         ]);
 
         $product = Product::findOrFail($validated['product_id']);
-        $variation = ProductVariation::findOrFail($validated['variation_id']);
+        $variation = !empty($validated['variation_id']) ? ProductVariation::find($validated['variation_id']) : $product->getDefaultVariation();
 
-        if ($variation->product_id !== $product->id) {
+        if ($variation && $variation->product_id !== $product->id) {
             abort(422, 'Selected variation does not belong to the product.');
         }
 
@@ -37,9 +37,9 @@ class OrderController extends Controller
         $outsideDhaka = (float) SiteSetting::getValue('delivery_outside_dhaka', 120);
 
         $shippingCost = $validated['city'] === 'Dhaka' ? $insideDhaka : $outsideDhaka;
-        $unitPrice = (float) ($variation->discount_price > 0 && $variation->discount_price < $variation->regular_price
-            ? $variation->discount_price
-            : ($variation->regular_price ?? $variation->price));
+        $unitPrice = $variation && $variation->discount_price > 0 && $variation->discount_price < $variation->regular_price
+            ? (float) $variation->discount_price
+            : (float) ($variation?->regular_price ?? $variation?->price ?? $product->regular_price ?? $product->base_price ?? 0);
         $total = ($unitPrice * $validated['quantity']) + $shippingCost;
 
         $order = Order::create([
@@ -49,9 +49,9 @@ class OrderController extends Controller
             'city' => $validated['city'],
             'delivery_zone' => $validated['city'] === 'Dhaka' ? 'inside_dhaka' : 'outside_dhaka',
             'product_id' => $product->id,
-            'variation_id' => $variation->id,
-            'selected_size' => $validated['selected_size'] ?? $variation->size,
-            'selected_color' => $validated['selected_color'] ?? $variation->color,
+            'variation_id' => $variation?->id,
+            'selected_size' => $validated['selected_size'],
+            'selected_color' => $validated['selected_color'],
             'quantity' => $validated['quantity'],
             'unit_price' => $unitPrice,
             'shipping_cost' => $shippingCost,

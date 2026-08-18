@@ -28,16 +28,22 @@ class ProductSeeder extends Seeder
             $sizes = ['৫০', '৫২', '৫৪', '৫৬', '৫৮'];
             $colors = ['কালো', 'মেরুন', 'অলিভ'];
 
-            foreach ($sizes as $index => $size) {
-                foreach ($colors as $colorIndex => $color) {
+            foreach ($sizes as $sizeValue) {
+                $product->sizes()->firstOrCreate(['size' => $sizeValue]);
+            }
+
+            foreach ($colors as $colorValue) {
+                $product->colors()->firstOrCreate(['color' => $colorValue]);
+            }
+
+            foreach ($sizes as $index => $sizeValue) {
+                foreach ($colors as $colorIndex => $colorValue) {
                     $product->variations()->create([
                         'name' => 'ফুল সেট',
                         'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার',
                         'price' => 2550,
                         'regular_price' => 3000,
                         'discount_price' => 2550,
-                        'size' => $size,
-                        'color' => $color,
                         'is_default' => $index === 0 && $colorIndex === 0,
                     ]);
                 }

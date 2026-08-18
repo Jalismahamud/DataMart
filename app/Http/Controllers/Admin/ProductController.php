@@ -43,14 +43,14 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'sizes' => ['nullable', 'string'],
+            'colors' => ['nullable', 'string'],
             'variations' => ['nullable', 'array'],
             'variations.*.name' => ['nullable', 'string'],
             'variations.*.short_description' => ['nullable', 'string', 'max:255'],
             'variations.*.price' => ['nullable', 'numeric'],
             'variations.*.regular_price' => ['nullable', 'numeric'],
             'variations.*.discount_price' => ['nullable', 'numeric'],
-            'variations.*.size' => ['nullable', 'string', 'max:50'],
-            'variations.*.color' => ['nullable', 'string', 'max:50'],
             'variations.*.is_default' => ['nullable', 'boolean'],
         ]);
 
@@ -68,6 +68,7 @@ class ProductController extends Controller
         ]);
 
         $this->storeImages($request, $product);
+        $this->syncAvailableSizesAndColors($product, $request->input('sizes'), $request->input('colors'));
 
         $variationRecords = $this->normalizeVariations($validated['variations'] ?? [], $regularPrice);
         $selectedDefaultId = null;
@@ -79,8 +80,6 @@ class ProductController extends Controller
                 'price' => $variation['price'],
                 'regular_price' => $variation['regular_price'],
                 'discount_price' => $variation['discount_price'],
-                'size' => $variation['size'],
-                'color' => $variation['color'],
                 'is_default' => false,
             ]);
 
@@ -110,14 +109,14 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'sizes' => ['nullable', 'string'],
+            'colors' => ['nullable', 'string'],
             'variations' => ['nullable', 'array'],
             'variations.*.name' => ['nullable', 'string'],
             'variations.*.short_description' => ['nullable', 'string', 'max:255'],
             'variations.*.price' => ['nullable', 'numeric'],
             'variations.*.regular_price' => ['nullable', 'numeric'],
             'variations.*.discount_price' => ['nullable', 'numeric'],
-            'variations.*.size' => ['nullable', 'string', 'max:50'],
-            'variations.*.color' => ['nullable', 'string', 'max:50'],
             'variations.*.is_default' => ['nullable', 'boolean'],
         ]);
 
@@ -146,6 +145,7 @@ class ProductController extends Controller
         }
 
         $this->storeImages($request, $product);
+        $this->syncAvailableSizesAndColors($product, $request->input('sizes'), $request->input('colors'));
 
         $variationRecords = $this->normalizeVariations($validated['variations'] ?? [], $regularPrice);
         $selectedDefaultId = null;
@@ -159,8 +159,6 @@ class ProductController extends Controller
                 'price' => $variation['price'],
                 'regular_price' => $variation['regular_price'],
                 'discount_price' => $variation['discount_price'],
-                'size' => $variation['size'],
-                'color' => $variation['color'],
                 'is_default' => false,
             ]);
 
@@ -195,25 +193,21 @@ class ProductController extends Controller
         foreach ($variations as $variation) {
             $name = trim((string) ($variation['name'] ?? ''));
             $shortDescription = trim((string) ($variation['short_description'] ?? ''));
-            $size = trim((string) ($variation['size'] ?? ''));
-            $color = trim((string) ($variation['color'] ?? ''));
             $price = (float) ($variation['price'] ?? $fallbackPrice);
             $regularPrice = (float) ($variation['regular_price'] ?? $price);
             $discountPrice = $variation['discount_price'] ?? null;
             $isDefault = !empty($variation['is_default']);
 
-            if ($name === '' && $shortDescription === '' && $size === '' && $color === '' && $price <= 0) {
+            if ($name === '' && $shortDescription === '' && $price <= 0) {
                 continue;
             }
 
             $filtered[] = [
-                'name' => $name !== '' ? $name : ($size !== '' || $color !== '' ? trim($size . ' ' . $color) : 'Variation'),
+                'name' => $name !== '' ? $name : 'Variation',
                 'short_description' => $shortDescription !== '' ? $shortDescription : null,
                 'price' => $price,
                 'regular_price' => $regularPrice,
                 'discount_price' => $discountPrice !== null && $discountPrice !== '' ? (float) $discountPrice : null,
-                'size' => $size !== '' ? $size : null,
-                'color' => $color !== '' ? $color : null,
                 'is_default' => $isDefault,
             ];
         }
@@ -225,8 +219,6 @@ class ProductController extends Controller
                 'price' => $fallbackPrice,
                 'regular_price' => $fallbackPrice,
                 'discount_price' => null,
-                'size' => null,
-                'color' => null,
                 'is_default' => true,
             ]];
         }
@@ -248,6 +240,34 @@ class ProductController extends Controller
         }
 
         return $filtered;
+    }
+
+    protected function syncAvailableSizesAndColors(Product $product, ?string $sizesInput, ?string $colorsInput): void
+    {
+        $product->sizes()->delete();
+        $product->colors()->delete();
+
+        foreach ($this->parseOptionList($sizesInput) as $size) {
+            $product->sizes()->create(['size' => $size]);
+        }
+
+        foreach ($this->parseOptionList($colorsInput) as $color) {
+            $product->colors()->create(['color' => $color]);
+        }
+    }
+
+    protected function parseOptionList(?string $input): array
+    {
+        if ($input === null || trim($input) === '') {
+            return [];
+        }
+
+        return collect(explode(',', $input))
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn ($value) => $value !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     protected function storeImages(Request $request, Product $product): void

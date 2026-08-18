@@ -13,8 +13,6 @@ class ProductVariation extends Model
         'price',
         'regular_price',
         'discount_price',
-        'size',
-        'color',
         'is_default',
     ];
 
