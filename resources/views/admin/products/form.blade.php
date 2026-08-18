@@ -1,6 +1,11 @@
 @extends('layouts.admin')
 
 @section('content')
+<!-- Include jQuery & Summernote -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
+
 <div class="card card-primary card-outline">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title mb-0">{{ isset($product->id) ? 'Edit Product' : 'Create Product' }}</h3>
@@ -20,17 +25,30 @@
                         <input type="text" name="name" class="form-control" value="{{ old('name', $product->name ?? '') }}" required>
                     </div>
                 </div>
-                <div class="col-md-6">
+            <div class="row g-4 mt-2">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>Base Price</label>
                         <input type="number" step="0.01" name="base_price" class="form-control" value="{{ old('base_price', $product->base_price ?? 0) }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Regular Price</label>
+                        <input type="number" step="0.01" name="regular_price" class="form-control" value="{{ old('regular_price', $product->regular_price ?? 0) }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Discount Price</label>
+                        <input type="number" step="0.01" name="discount_price" class="form-control" value="{{ old('discount_price', $product->discount_price ?? '') }}">
                     </div>
                 </div>
 
                 <div class="col-12">
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea name="description" class="form-control" rows="4">{{ old('description', $product->description ?? '') }}</textarea>
+                        <textarea name="description" id="summernote" class="form-control" rows="4">{{ old('description', $product->description ?? '') }}</textarea>
                     </div>
                 </div>
 
@@ -51,91 +69,58 @@
                         </div>
                     @endif
                 </div>
-
-                <div class="col-12">
-                    <div class="form-check mt-2">
-                        <input type="checkbox" name="is_active" value="1" class="form-check-input" {{ old('is_active', $product->is_active ?? true) ? 'checked' : '' }}>
-                        <label class="form-check-label">Published / Active</label>
-                    </div>
-                </div>
             </div>
 
             <hr class="my-4">
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Product Variations</h5>
-                <button type="button" class="btn btn-outline-primary btn-sm" id="add-variation">Add Variation</button>
-            </div>
-
-            <div id="variations-wrapper">
-                @php $variations = old('variations', $product->variations ?? []); @endphp
-                @if($variations && count($variations))
-                    @foreach($variations as $i => $variation)
-                        <div class="row variation-item g-3 mb-3 align-items-end">
-                            <div class="col-md-3">
-                                <label>Variation Name</label>
-                                <input type="text" name="variations[{{ $i }}][name]" class="form-control" value="{{ $variation['name'] ?? '' }}" placeholder="Full Set">
-                            </div>
-                            <div class="col-md-3">
-                                <label>Short Description</label>
-                                <input type="text" name="variations[{{ $i }}][short_description]" class="form-control" value="{{ $variation['short_description'] ?? '' }}" placeholder="Premium full coverage set">
-                            </div>
-                            <div class="col-md-1">
-                                <label>Size</label>
-                                <input type="text" name="variations[{{ $i }}][size]" class="form-control" value="{{ $variation['size'] ?? '' }}" placeholder="50">
-                            </div>
-                            <div class="col-md-1">
-                                <label>Color</label>
-                                <input type="text" name="variations[{{ $i }}][color]" class="form-control" value="{{ $variation['color'] ?? '' }}" placeholder="Black">
-                            </div>
-                            <div class="col-md-2">
-                                <label>Price</label>
-                                <input type="number" step="0.01" name="variations[{{ $i }}][price]" class="form-control" value="{{ $variation['price'] ?? 0 }}">
-                            </div>
-                            <div class="col-md-1">
-                                <label>Default</label>
-                                <div class="mt-2">
-                                    <input type="checkbox" class="default-variation-toggle" name="variations[{{ $i }}][is_default]" value="1" {{ !empty($variation['is_default']) ? 'checked' : '' }}>
-                                </div>
-                            </div>
-                            <div class="col-md-1 text-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm remove-variation">Remove</button>
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="row variation-item g-3 mb-3 align-items-end">
-                        <div class="col-md-3">
-                            <label>Variation Name</label>
-                            <input type="text" name="variations[0][name]" class="form-control" value="Full Set" placeholder="Full Set">
-                        </div>
-                        <div class="col-md-3">
-                            <label>Short Description</label>
-                            <input type="text" name="variations[0][short_description]" class="form-control" value="Premium full coverage set" placeholder="Premium full coverage set">
-                        </div>
-                        <div class="col-md-1">
-                            <label>Size</label>
-                            <input type="text" name="variations[0][size]" class="form-control" value="50" placeholder="50">
-                        </div>
-                        <div class="col-md-1">
-                            <label>Color</label>
-                            <input type="text" name="variations[0][color]" class="form-control" value="Black" placeholder="Black">
-                        </div>
-                        <div class="col-md-2">
-                            <label>Price</label>
-                            <input type="number" step="0.01" name="variations[0][price]" class="form-control" value="0">
-                        </div>
-                        <div class="col-md-1">
-                            <label>Default</label>
-                            <div class="mt-2">
-                                <input type="checkbox" class="default-variation-toggle" name="variations[0][is_default]" value="1" checked>
-                            </div>
-                        </div>
-                        <div class="col-md-1 text-end">
-                            <button type="button" class="btn btn-outline-danger btn-sm remove-variation">Remove</button>
-                        </div>
+            <div class="row g-4">
+                <!-- Sizes Section -->
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Product Sizes</h5>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="add-size">Add Size</button>
                     </div>
-                @endif
+                    <div id="sizes-wrapper">
+                        @php $sizes = old('sizes', isset($product->sizes) ? $product->sizes->toArray() : []); @endphp
+                        @if($sizes && count($sizes))
+                            @foreach($sizes as $i => $size)
+                                <div class="input-group mb-2 size-item">
+                                    <input type="text" name="sizes[{{ $i }}][name]" class="form-control" value="{{ $size['name'] ?? '' }}" placeholder="e.g. XL, 42">
+                                    <button type="button" class="btn btn-outline-danger remove-item">Remove</button>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="input-group mb-2 size-item">
+                                <input type="text" name="sizes[0][name]" class="form-control" placeholder="e.g. XL, 42">
+                                <button type="button" class="btn btn-outline-danger remove-item">Remove</button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Colors Section -->
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Product Colors</h5>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="add-color">Add Color</button>
+                    </div>
+                    <div id="colors-wrapper">
+                        @php $colors = old('colors', isset($product->colors) ? $product->colors->toArray() : []); @endphp
+                        @if($colors && count($colors))
+                            @foreach($colors as $i => $color)
+                                <div class="input-group mb-2 color-item">
+                                    <input type="text" name="colors[{{ $i }}][name]" class="form-control" value="{{ $color['name'] ?? '' }}" placeholder="e.g. Red, Blue">
+                                    <button type="button" class="btn btn-outline-danger remove-item">Remove</button>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="input-group mb-2 color-item">
+                                <input type="text" name="colors[0][name]" class="form-control" placeholder="e.g. Red, Blue">
+                                <button type="button" class="btn btn-outline-danger remove-item">Remove</button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
             </div>
 
             <div class="d-flex justify-content-end mt-4 gap-2">
@@ -146,29 +131,31 @@
 </div>
 
 <script>
-    let variationIndex = {{ count(old('variations', $product->variations ?? [])) ?: 1 }};
-
-    const enforceSingleDefault = () => {
-        const toggles = document.querySelectorAll('.default-variation-toggle');
-        toggles.forEach((toggle) => {
-            toggle.addEventListener('change', function () {
-                if (!this.checked) {
-                    return;
-                }
-
-                toggles.forEach((other) => {
-                    if (other !== this) {
-                        other.checked = false;
-                    }
-                });
-            });
+    $(document).ready(function() {
+        $('#summernote').summernote({
+            height: 250,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'underline', 'clear']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
         });
-    };
+    });
 
-    const removeVariation = () => {
-        document.querySelectorAll('.remove-variation').forEach((button) => {
-            button.addEventListener('click', function () {
-                const row = this.closest('.variation-item');
+    let sizeIndex = {{ count(old('sizes', isset($product->sizes) ? $product->sizes->toArray() : [])) ?: 1 }};
+    let colorIndex = {{ count(old('colors', isset($product->colors) ? $product->colors->toArray() : [])) ?: 1 }};
+
+    const attachRemoveEvents = () => {
+        document.querySelectorAll('.remove-item').forEach((button) => {
+            // Remove existing listeners by replacing the element to avoid duplicates
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            newButton.addEventListener('click', function () {
+                const row = this.closest('.input-group');
                 if (row) {
                     row.remove();
                 }
@@ -176,48 +163,32 @@
         });
     };
 
-    enforceSingleDefault();
-    removeVariation();
+    attachRemoveEvents();
 
-    document.getElementById('add-variation')?.addEventListener('click', function () {
-        const wrapper = document.getElementById('variations-wrapper');
+    document.getElementById('add-size')?.addEventListener('click', function () {
+        const wrapper = document.getElementById('sizes-wrapper');
         const row = document.createElement('div');
-        row.className = 'row variation-item g-3 mb-3 align-items-end';
+        row.className = 'input-group mb-2 size-item';
         row.innerHTML = `
-            <div class="col-md-3">
-                <label>Variation Name</label>
-                <input type="text" name="variations[${variationIndex}][name]" class="form-control" placeholder="Full Set">
-            </div>
-            <div class="col-md-3">
-                <label>Short Description</label>
-                <input type="text" name="variations[${variationIndex}][short_description]" class="form-control" placeholder="Premium full coverage set">
-            </div>
-            <div class="col-md-1">
-                <label>Size</label>
-                <input type="text" name="variations[${variationIndex}][size]" class="form-control" placeholder="50">
-            </div>
-            <div class="col-md-1">
-                <label>Color</label>
-                <input type="text" name="variations[${variationIndex}][color]" class="form-control" placeholder="Black">
-            </div>
-            <div class="col-md-2">
-                <label>Price</label>
-                <input type="number" step="0.01" name="variations[${variationIndex}][price]" class="form-control" value="0">
-            </div>
-            <div class="col-md-1">
-                <label>Default</label>
-                <div class="mt-2">
-                    <input type="checkbox" class="default-variation-toggle" name="variations[${variationIndex}][is_default]" value="1">
-                </div>
-            </div>
-            <div class="col-md-1 text-end">
-                <button type="button" class="btn btn-outline-danger btn-sm remove-variation">Remove</button>
-            </div>
+            <input type="text" name="sizes[${sizeIndex}][name]" class="form-control" placeholder="e.g. XL, 42">
+            <button type="button" class="btn btn-outline-danger remove-item">Remove</button>
         `;
         wrapper.appendChild(row);
-        enforceSingleDefault();
-        removeVariation();
-        variationIndex++;
+        attachRemoveEvents();
+        sizeIndex++;
+    });
+
+    document.getElementById('add-color')?.addEventListener('click', function () {
+        const wrapper = document.getElementById('colors-wrapper');
+        const row = document.createElement('div');
+        row.className = 'input-group mb-2 color-item';
+        row.innerHTML = `
+            <input type="text" name="colors[${colorIndex}][name]" class="form-control" placeholder="e.g. Red, Blue">
+            <button type="button" class="btn btn-outline-danger remove-item">Remove</button>
+        `;
+        wrapper.appendChild(row);
+        attachRemoveEvents();
+        colorIndex++;
     });
 </script>
 @endsection

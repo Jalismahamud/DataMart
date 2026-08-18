@@ -24,23 +24,17 @@ class ProductSeeder extends Seeder
             ]
         );
 
-        if ($product->variations()->count() === 0) {
+        if ($product->sizes()->count() === 0) {
             $sizes = ['৫০', '৫২', '৫৪', '৫৬', '৫৮'];
-            $colors = ['কালো', 'মেরুন', 'অলিভ'];
+            foreach ($sizes as $size) {
+                $product->sizes()->create(['name' => $size]);
+            }
+        }
 
-            foreach ($sizes as $index => $size) {
-                foreach ($colors as $colorIndex => $color) {
-                    $product->variations()->create([
-                        'name' => 'ফুল সেট',
-                        'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার',
-                        'price' => 2550,
-                        'regular_price' => 3000,
-                        'discount_price' => 2550,
-                        'size' => $size,
-                        'color' => $color,
-                        'is_default' => $index === 0 && $colorIndex === 0,
-                    ]);
-                }
+        if ($product->colors()->count() === 0) {
+            $colors = ['কালো', 'মেরুন', 'অলিভ'];
+            foreach ($colors as $color) {
+                $product->colors()->create(['name' => $color]);
             }
         }
 

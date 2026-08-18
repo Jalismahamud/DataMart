@@ -13,32 +13,16 @@
 
 <body>
     @php
-        $productList = $products->count() ? $products : collect([
-            (object) [
-                'id' => 1,
-                'name' => 'ফুল সেট বোরকা',
-                'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার',
-                'base_price' => 3000,
-                'regular_price' => 3000,
-                'discount_price' => 2550,
-                'defaultVariation' => (object) ['price' => 2550, 'discount_price' => 2550],
-            ]
-        ]);
-
+        $productList = $products;
         $firstProduct = $productList->first();
-        $firstSizes = $firstProduct && method_exists($firstProduct, 'getUniqueSizes') ? $firstProduct->getUniqueSizes() : ['৫০', '৫২', '৫৪', '৫৬', '৫৮'];
-        $firstColors = $firstProduct && method_exists($firstProduct, 'getColorsBySize') && !empty($firstSizes) ? $firstProduct->getColorsBySize($firstSizes[0]) : ['কালো', 'মেরুন', 'অলিভ'];
-
-        $reviewItems = $reviews->count() ? $reviews : collect([
-            (object) ['image' => '1.png', 'rating' => 5],
-            (object) ['image' => '1.png', 'rating' => 5],
-            (object) ['image' => '1.png', 'rating' => 5],
-        ]);
+        $firstSizes = $firstProduct && $firstProduct->sizes ? $firstProduct->sizes->pluck('name') : collect([]);
+        $firstColors = $firstProduct && $firstProduct->colors ? $firstProduct->colors->pluck('name') : collect([]);
+        $reviewItems = $reviews;
 
         $productTitle = $settings['product_title'] ?? 'ডিজিটাল প্রিন্ট বোরকা ও হিজাব সেট';
         $productSubtitle = $settings['product_subtitle'] ?? 'পর্দা ও স্টাইল এখন হবে একসাথে';
         $regularPrice = (float) ($settings['product_regular_price'] ?? ($firstProduct->regular_price ?? 3000));
-        $offerPrice = (float) ($settings['product_offer_price'] ?? (($firstProduct && method_exists($firstProduct, 'getDefaultVariation')) ? ($firstProduct->getDefaultVariation()?->discount_price ?? $firstProduct->getDefaultVariation()?->price ?? 2550) : 2550));
+        $offerPrice = (float) ($settings['product_offer_price'] ?? ($firstProduct ? $firstProduct->effective_price : 2550));
         $ctaText = $settings['product_cta_text'] ?? 'অর্ডার করতে এখানে ক্লিক করুন';
         $heroTitle = $settings['hero_title'] ?? 'প্রিমিয়াম বোরকা কালেকশন';
         $heroSubtitle = $settings['hero_subtitle'] ?? 'আমাদের নিজস্ব ফ্যাক্টরিতে উৎপাদিত';
@@ -70,25 +54,25 @@
         <div class="hero-img-container position-relative">
             <div class="hero-badge" style="z-index: 10;"> {{ $heroBadge }} </div>
             <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    @foreach ($productList->take(3) as $index => $product)
-                        @php
-                            $heroImage = asset('asset/images/products/' . (($index % 3) + 1) . '.webp');
-                            if (($product->images ?? null) && $product->images->isNotEmpty()) {
-                                $heroImage = asset('images/products/' . $product->images->first()->image_path);
-                            } elseif (!empty($product->featured_image ?? null)) {
-                                $heroImage = asset('images/products/' . $product->featured_image);
-                            }
-                        @endphp
-                        <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                            <img src="{{ $heroImage }}" class="d-block w-100 hero-img" alt="{{ $product->name ?? 'Product' }}">
+                <div class="carousel-inner" id="carousel-inner-container">
+                    @if($firstProduct && $firstProduct->images && $firstProduct->images->count() > 0)
+                        @foreach ($firstProduct->images as $index => $image)
+                            <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                <img src="{{ asset('images/products/' . $image->image_path) }}" class="d-block w-100 hero-img" alt="Product Image">
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="carousel-item active">
+                            <img src="{{ asset('asset/images/products/1.webp') }}" class="d-block w-100 hero-img" alt="Fallback Image">
                         </div>
-                    @endforeach
+                    @endif
                 </div>
-                <div class="carousel-indicators mt-3 mb-2" style="position: static;">
-                    @foreach ($productList->take(3) as $index => $product)
-                        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}" aria-current="{{ $index === 0 ? 'true' : 'false' }}" aria-label="Slide {{ $index + 1 }}"></button>
-                    @endforeach
+                <div class="carousel-indicators mt-3 mb-2" id="carousel-indicators-container" style="position: static;">
+                    @if($firstProduct && $firstProduct->images && $firstProduct->images->count() > 0)
+                        @foreach ($firstProduct->images as $index => $image)
+                            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}" aria-current="{{ $index === 0 ? 'true' : 'false' }}" aria-label="Slide {{ $index + 1 }}"></button>
+                        @endforeach
+                    @endif
                 </div>
             </div>
             <hr style="border-top: 2px solid #e0e0e0; margin: 5px 0 15px 0;">
@@ -131,15 +115,10 @@
         </div>
 
         <div class="px-3 mt-4">
-            <h3 class="features-heading">কেন এই বোরকা বেস্ট:</h3>
-            <ul class="features-list-new">
-                <li><span>🖤</span> বোরকা: এক্সক্লুসিভ দুই পার্ট কটি বোরকা</li>
-                <li><span>✨</span> হাতাই ও বডি জুড়ে সুন্দর সিকোয়েন্স লেস ওয়ার্ক</li>
-                <li><span>👗</span> বোরকা কাপড়: অরিজিনাল দুবাই চেরি (ঘের: ১৫০ ইঞ্চি প্লাস)</li>
-                <li><span>🧕</span> হিজাব / নিকার: হুডি হিজাব ডিজাইন (চারদিকে এলিগ্যান্ট লেস ওয়ার্ক)</li>
-                <li><span>🌸</span> ডিজাইন: পিছনে দুই পার্ট, সামনে দুই পার্ট</li>
-                <li><span>🌿</span> কাপড়: অরিজিনাল সফট শিফন জর্জেট (হালকা ও অত্যন্ত আরামদায়ক)</li>
-            </ul>
+            <h3 class="features-heading">পণ্য সম্পর্কে বিস্তারিত:</h3>
+            <div id="dynamic-description" class="features-list-new" style="color: #666; font-size: 0.95rem; line-height: 1.6;">
+                {!! $firstProduct->description ?? '<p>কোনো বিস্তারিত তথ্য নেই।</p>' !!}
+            </div>
         </div>
 
         <div class="px-3 mb-4">
@@ -204,21 +183,40 @@
         </div>
 
         <div id="order-form" class="form-section-new">
-            <form id="checkoutForm">
+            @if(session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            
+            <form id="checkoutForm" action="{{ route('order.store') }}" method="POST">
+                @csrf
                 <div class="form-step">
                     <label class="step-label">① পণ্য বাছাই করুন</label>
 
                     @foreach ($productList as $index => $product)
                         @php
-                            $productDefault = method_exists($product, 'getDefaultVariation') ? $product->getDefaultVariation() : ($product->defaultVariation ?? null);
-                            $productPrice = (float) (($productDefault->discount_price ?? 0) > 0 ? ($productDefault->discount_price ?? $productDefault->price) : ($productDefault->price ?? $product->base_price ?? 2550));
-                            $productDescription = $productDefault->short_description ?? $product->description ?? 'Premium product';
+                            $productPrice = (float) (($product->discount_price > 0) ? $product->discount_price : $product->regular_price);
+                            if ($productPrice == 0) $productPrice = $product->base_price ?? 2550;
+                            $productDescription = $product->short_description ?? 'Premium product';
+                            $productSizes = $product->sizes ? $product->sizes->pluck('name')->toJson() : '[]';
+                            $productColors = $product->colors ? $product->colors->pluck('name')->toJson() : '[]';
+                            $productImages = $product->images ? $product->images->map(function($img) { return asset('images/products/' . $img->image_path); })->toJson() : '[]';
                         @endphp
-                        <label class="product-card {{ $index === 0 ? 'selected' : '' }}" onclick="selectProduct(this, {{ $productPrice }})">
+                        <label class="product-card {{ $index === 0 ? 'selected' : '' }}" data-sizes="{{ $productSizes }}" data-colors="{{ $productColors }}" data-images="{{ $productImages }}" data-description="{{ $product->description }}" onclick="selectProduct(this, {{ $productPrice }})">
                             @if ($index === 0)
                                 <div class="popular-badge">সর্বাধিক জনপ্রিয়</div>
                             @endif
-                            <input type="radio" name="product" value="{{ $product->id ?? 'product-' . $index }}" {{ $index === 0 ? 'checked' : '' }} class="d-none">
+                            <input type="radio" name="product_id" value="{{ $product->id ?? 'product-' . $index }}" {{ $index === 0 ? 'checked' : '' }} class="d-none">
                             <div class="d-flex align-items-center w-100">
                                 <div class="product-icon">⭐</div>
                                 <div class="product-details">
@@ -236,10 +234,10 @@
 
                 <div class="form-step">
                     <label class="step-label">② কালার বাছাই করুন</label>
-                    <div class="size-grid-5">
-                        @foreach (array_values($firstColors ?: ['কালো', 'মেরুন', 'অলিভ']) as $index => $color)
+                    <div class="size-grid-5" id="color-container">
+                        @foreach ($firstColors as $index => $color)
                             <label class="size-box {{ $index === 0 ? 'active' : '' }}" onclick="selectColor(this)">
-                                <input type="radio" name="color" value="{{ $color }}" {{ $index === 0 ? 'checked' : '' }} class="d-none">
+                                <input type="radio" name="selected_color" value="{{ $color }}" {{ $index === 0 ? 'checked' : '' }} class="d-none">
                                 {{ $color }}
                             </label>
                         @endforeach
@@ -248,10 +246,10 @@
 
                 <div class="form-step">
                     <label class="step-label">③ সাইজ বাছাই করুন <span class="step-sub">(লং সাইজ ইঞ্চিতে)</span></label>
-                    <div class="size-grid-5">
-                        @foreach (array_values($firstSizes ?: ['৫০', '৫২', '৫৪', '৫৬', '৫৮']) as $index => $size)
+                    <div class="size-grid-5" id="size-container">
+                        @foreach ($firstSizes as $index => $size)
                             <label class="size-box {{ $index === 0 ? 'active' : '' }}" onclick="selectSize(this)">
-                                <input type="radio" name="size" value="{{ $size }}" {{ $index === 0 ? 'checked' : '' }} class="d-none">
+                                <input type="radio" name="selected_size" value="{{ $size }}" {{ $index === 0 ? 'checked' : '' }} class="d-none">
                                 {{ $size }}
                             </label>
                         @endforeach
@@ -264,6 +262,7 @@
                         <div class="qty-control">
                             <button type="button" class="qty-btn minus" onclick="decreaseQty()">-</button>
                             <input type="text" id="qty" class="qty-input-new" value="১" readonly>
+                            <input type="hidden" name="quantity" id="qty_hidden" value="1">
                             <button type="button" class="qty-btn plus" onclick="increaseQty()">+</button>
                         </div>
                         <div class="qty-total-text">
@@ -273,22 +272,24 @@
                 </div>
 
                 <div class="form-group-custom">
-                    <label class="form-label-custom">④ আপনার নাম</label>
-                    <input type="text" class="form-control-custom" placeholder="আপনার নাম লিখুন..." required>
+                    <label class="form-label-custom">আপনার নাম</label>
+                    <input type="text" name="customer_name" class="form-control-custom" placeholder="আপনার নাম লিখুন..." required>
                 </div>
 
                 <div class="form-group-custom">
-                    <input type="tel" class="form-control-custom" placeholder="01XXXXXXXXX" required>
+                    <label class="form-label-custom">মোবাইল নাম্বার</label>
+                    <input type="tel" name="phone" class="form-control-custom" placeholder="01XXXXXXXXX" required>
                 </div>
 
                 <div class="form-group-custom">
-                    <textarea class="form-control-custom" rows="3" placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." required></textarea>
+                    <label class="form-label-custom">ডেলিভারি ঠিকানা</label>
+                    <textarea name="address" class="form-control-custom" rows="3" placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন..." required></textarea>
                 </div>
 
                 <div class="form-step">
-                    <label class="step-label">④ ডেলিভারি এলাকা</label>
+                    <label class="step-label">⑤ ডেলিভারি এলাকা</label>
                     <label class="product-card selected delivery-new-card" onclick="selectDelivery(this, {{ $deliveryOutside }}, 'ঢাকার বাইরে')">
-                        <input type="radio" name="delivery_area" class="d-none" value="outside" checked>
+                        <input type="radio" name="city" class="d-none" value="Outside Dhaka" checked>
                         <div class="d-flex align-items-center w-100">
                             <div class="delivery-icon-new">🚚</div>
                             <div class="product-details">
@@ -301,7 +302,7 @@
                         </div>
                     </label>
                     <label class="product-card delivery-new-card" onclick="selectDelivery(this, {{ $deliveryInside }}, 'ঢাকার ভিতর')">
-                        <input type="radio" name="delivery_area" class="d-none" value="inside">
+                        <input type="radio" name="city" class="d-none" value="Dhaka">
                         <div class="d-flex align-items-center w-100">
                             <div class="delivery-icon-new">🏢</div>
                             <div class="product-details">

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\ProductVariation;
 use App\Models\SiteSetting;
 use Illuminate\Http\Request;
 
@@ -19,7 +18,6 @@ class OrderController extends Controller
             'address' => ['required', 'string'],
             'city' => ['required', 'string'],
             'product_id' => ['required', 'exists:products,id'],
-            'variation_id' => ['required', 'exists:product_variations,id'],
             'selected_size' => ['nullable', 'string', 'max:50'],
             'selected_color' => ['nullable', 'string', 'max:50'],
             'quantity' => ['required', 'integer', 'min:1'],
@@ -27,19 +25,12 @@ class OrderController extends Controller
         ]);
 
         $product = Product::findOrFail($validated['product_id']);
-        $variation = ProductVariation::findOrFail($validated['variation_id']);
-
-        if ($variation->product_id !== $product->id) {
-            abort(422, 'Selected variation does not belong to the product.');
-        }
 
         $insideDhaka = (float) SiteSetting::getValue('delivery_inside_dhaka', 70);
         $outsideDhaka = (float) SiteSetting::getValue('delivery_outside_dhaka', 120);
 
         $shippingCost = $validated['city'] === 'Dhaka' ? $insideDhaka : $outsideDhaka;
-        $unitPrice = (float) ($variation->discount_price > 0 && $variation->discount_price < $variation->regular_price
-            ? $variation->discount_price
-            : ($variation->regular_price ?? $variation->price));
+        $unitPrice = $product->effective_price;
         $total = ($unitPrice * $validated['quantity']) + $shippingCost;
 
         Order::create([
@@ -49,9 +40,8 @@ class OrderController extends Controller
             'city' => $validated['city'],
             'delivery_zone' => $validated['city'] === 'Dhaka' ? 'inside_dhaka' : 'outside_dhaka',
             'product_id' => $product->id,
-            'variation_id' => $variation->id,
-            'selected_size' => $validated['selected_size'] ?? $variation->size,
-            'selected_color' => $validated['selected_color'] ?? $variation->color,
+            'selected_size' => $validated['selected_size'] ?? null,
+            'selected_color' => $validated['selected_color'] ?? null,
             'quantity' => $validated['quantity'],
             'unit_price' => $unitPrice,
             'shipping_cost' => $shippingCost,

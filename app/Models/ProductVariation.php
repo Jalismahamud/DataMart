@@ -3,35 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductVariation extends Model
 {
     protected $fillable = [
         'product_id',
         'name',
-        'short_description',
         'price',
         'regular_price',
         'discount_price',
-        'size',
-        'color',
         'is_default',
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
+        'price' => 'decimal:2',
+        'regular_price' => 'decimal:2',
+        'discount_price' => 'decimal:2',
     ];
 
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function getEffectivePriceAttribute(): float
-    {
-        $regularPrice = (float) ($this->regular_price ?? $this->price ?? 0);
-        $discountPrice = (float) ($this->discount_price ?? 0);
-
-        return $discountPrice > 0 && $discountPrice < $regularPrice ? $discountPrice : $regularPrice;
     }
 }

@@ -21,13 +21,8 @@ class OrderFlowTest extends TestCase
             'is_active' => true,
         ]);
 
-        $variation = $product->variations()->create([
-            'name' => 'Full Set',
-            'price' => 1800,
-            'size' => 'M',
-            'color' => 'Black',
-            'is_default' => true,
-        ]);
+        $product->sizes()->create(['name' => 'M']);
+        $product->colors()->create(['name' => 'Black']);
 
         $response = $this->post('/order', [
             'customer_name' => 'Rafi Ahmed',
@@ -35,7 +30,6 @@ class OrderFlowTest extends TestCase
             'address' => 'Dhanmondi, Dhaka',
             'city' => 'Dhaka',
             'product_id' => $product->id,
-            'variation_id' => $variation->id,
             'selected_size' => 'M',
             'selected_color' => 'Black',
             'quantity' => 1,
@@ -44,7 +38,6 @@ class OrderFlowTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('orders', [
             'product_id' => $product->id,
-            'variation_id' => $variation->id,
             'selected_size' => 'M',
             'selected_color' => 'Black',
         ]);

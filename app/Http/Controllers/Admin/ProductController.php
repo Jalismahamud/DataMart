@@ -4,15 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use File;
 
 class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with(['variations', 'images'])->latest()->get();
+        $products = Product::with(['sizes', 'colors', 'images'])->latest()->get();
 
         return view('admin.products.index', compact('products'));
     }
@@ -25,7 +25,7 @@ class ProductController extends Controller
             return redirect()->route('admin.products.edit', $product);
         }
 
-        return view('admin.products.form', ['product' => new Product()]);
+        return view('admin.products.form', ['product' => new Product]);
     }
 
     public function store(Request $request)
@@ -43,15 +43,10 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'variations' => ['nullable', 'array'],
-            'variations.*.name' => ['nullable', 'string'],
-            'variations.*.short_description' => ['nullable', 'string', 'max:255'],
-            'variations.*.price' => ['nullable', 'numeric'],
-            'variations.*.regular_price' => ['nullable', 'numeric'],
-            'variations.*.discount_price' => ['nullable', 'numeric'],
-            'variations.*.size' => ['nullable', 'string', 'max:50'],
-            'variations.*.color' => ['nullable', 'string', 'max:50'],
-            'variations.*.is_default' => ['nullable', 'boolean'],
+            'sizes' => ['nullable', 'array'],
+            'sizes.*.name' => ['nullable', 'string', 'max:50'],
+            'colors' => ['nullable', 'array'],
+            'colors.*.name' => ['nullable', 'string', 'max:50'],
         ]);
 
         $regularPrice = $validated['regular_price'] ?? $validated['base_price'] ?? 0;
@@ -64,38 +59,19 @@ class ProductController extends Controller
             'base_price' => $regularPrice,
             'regular_price' => $regularPrice,
             'discount_price' => $discountPrice,
-            'is_active' => $validated['is_active'] ?? true,
+            'is_active' => true,
         ]);
 
         $this->storeImages($request, $product);
-
-        $variationRecords = $this->normalizeVariations($validated['variations'] ?? [], $regularPrice);
-        $selectedDefaultId = null;
-
-        foreach ($variationRecords as $variation) {
-            $created = $product->variations()->create([
-                'name' => $variation['name'],
-                'short_description' => $variation['short_description'] ?? null,
-                'price' => $variation['price'],
-                'regular_price' => $variation['regular_price'],
-                'discount_price' => $variation['discount_price'],
-                'size' => $variation['size'],
-                'color' => $variation['color'],
-                'is_default' => false,
-            ]);
-
-            if ($variation['is_default']) {
-                $selectedDefaultId = $created->id;
-            }
-        }
-
-        $product->syncDefaultVariation($selectedDefaultId);
+        $this->syncSizesAndColors($product, $validated);
 
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully.');
     }
 
     public function edit(Product $product)
     {
+        $product->load(['sizes', 'colors']);
+
         return view('admin.products.form', compact('product'));
     }
 
@@ -110,15 +86,10 @@ class ProductController extends Controller
             'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array'],
             'images.*' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'variations' => ['nullable', 'array'],
-            'variations.*.name' => ['nullable', 'string'],
-            'variations.*.short_description' => ['nullable', 'string', 'max:255'],
-            'variations.*.price' => ['nullable', 'numeric'],
-            'variations.*.regular_price' => ['nullable', 'numeric'],
-            'variations.*.discount_price' => ['nullable', 'numeric'],
-            'variations.*.size' => ['nullable', 'string', 'max:50'],
-            'variations.*.color' => ['nullable', 'string', 'max:50'],
-            'variations.*.is_default' => ['nullable', 'boolean'],
+            'sizes' => ['nullable', 'array'],
+            'sizes.*.name' => ['nullable', 'string', 'max:50'],
+            'colors' => ['nullable', 'array'],
+            'colors.*.name' => ['nullable', 'string', 'max:50'],
         ]);
 
         $regularPrice = $validated['regular_price'] ?? $validated['base_price'] ?? 0;
@@ -131,45 +102,21 @@ class ProductController extends Controller
             'base_price' => $regularPrice,
             'regular_price' => $regularPrice,
             'discount_price' => $discountPrice,
-            'is_active' => $validated['is_active'] ?? true,
+            'is_active' => true,
         ]);
 
         if ($request->hasFile('images')) {
             foreach ($product->images as $image) {
-                $imagePath = public_path('images/products/' . $image->image_path);
+                $imagePath = public_path('images/products/'.$image->image_path);
                 if (File::exists($imagePath)) {
                     File::delete($imagePath);
                 }
             }
-
             $product->images()->delete();
         }
 
         $this->storeImages($request, $product);
-
-        $variationRecords = $this->normalizeVariations($validated['variations'] ?? [], $regularPrice);
-        $selectedDefaultId = null;
-
-        $product->variations()->delete();
-
-        foreach ($variationRecords as $variation) {
-            $created = $product->variations()->create([
-                'name' => $variation['name'],
-                'short_description' => $variation['short_description'] ?? null,
-                'price' => $variation['price'],
-                'regular_price' => $variation['regular_price'],
-                'discount_price' => $variation['discount_price'],
-                'size' => $variation['size'],
-                'color' => $variation['color'],
-                'is_default' => false,
-            ]);
-
-            if ($variation['is_default']) {
-                $selectedDefaultId = $created->id;
-            }
-        }
-
-        $product->syncDefaultVariation($selectedDefaultId);
+        $this->syncSizesAndColors($product, $validated);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');
     }
@@ -177,7 +124,7 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         foreach ($product->images as $image) {
-            $imagePath = public_path('images/products/' . $image->image_path);
+            $imagePath = public_path('images/products/'.$image->image_path);
             if (File::exists($imagePath)) {
                 File::delete($imagePath);
             }
@@ -188,66 +135,26 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
     }
 
-    protected function normalizeVariations(array $variations, float $fallbackPrice): array
+    protected function syncSizesAndColors(Product $product, array $validated): void
     {
-        $filtered = [];
+        $product->sizes()->delete();
+        $product->colors()->delete();
 
-        foreach ($variations as $variation) {
-            $name = trim((string) ($variation['name'] ?? ''));
-            $shortDescription = trim((string) ($variation['short_description'] ?? ''));
-            $size = trim((string) ($variation['size'] ?? ''));
-            $color = trim((string) ($variation['color'] ?? ''));
-            $price = (float) ($variation['price'] ?? $fallbackPrice);
-            $regularPrice = (float) ($variation['regular_price'] ?? $price);
-            $discountPrice = $variation['discount_price'] ?? null;
-            $isDefault = !empty($variation['is_default']);
-
-            if ($name === '' && $shortDescription === '' && $size === '' && $color === '' && $price <= 0) {
-                continue;
-            }
-
-            $filtered[] = [
-                'name' => $name !== '' ? $name : ($size !== '' || $color !== '' ? trim($size . ' ' . $color) : 'Variation'),
-                'short_description' => $shortDescription !== '' ? $shortDescription : null,
-                'price' => $price,
-                'regular_price' => $regularPrice,
-                'discount_price' => $discountPrice !== null && $discountPrice !== '' ? (float) $discountPrice : null,
-                'size' => $size !== '' ? $size : null,
-                'color' => $color !== '' ? $color : null,
-                'is_default' => $isDefault,
-            ];
-        }
-
-        if (empty($filtered)) {
-            return [[
-                'name' => 'Full Set',
-                'short_description' => 'Premium full coverage set',
-                'price' => $fallbackPrice,
-                'regular_price' => $fallbackPrice,
-                'discount_price' => null,
-                'size' => null,
-                'color' => null,
-                'is_default' => true,
-            ]];
-        }
-
-        $defaultIndex = null;
-        foreach ($filtered as $index => $variation) {
-            if ($variation['is_default']) {
-                $defaultIndex = $index;
-                break;
+        if (! empty($validated['sizes'])) {
+            foreach ($validated['sizes'] as $size) {
+                if (! empty(trim($size['name'] ?? ''))) {
+                    $product->sizes()->create(['name' => trim($size['name'])]);
+                }
             }
         }
 
-        if ($defaultIndex === null) {
-            $filtered[0]['is_default'] = true;
-        } else {
-            foreach ($filtered as $index => $variation) {
-                $filtered[$index]['is_default'] = $index === $defaultIndex;
+        if (! empty($validated['colors'])) {
+            foreach ($validated['colors'] as $color) {
+                if (! empty(trim($color['name'] ?? ''))) {
+                    $product->colors()->create(['name' => trim($color['name'])]);
+                }
             }
         }
-
-        return $filtered;
     }
 
     protected function storeImages(Request $request, Product $product): void
@@ -257,12 +164,12 @@ class ProductController extends Controller
         }
 
         $uploadDir = public_path('images/products');
-        if (!File::exists($uploadDir)) {
+        if (! File::exists($uploadDir)) {
             File::makeDirectory($uploadDir, 0755, true);
         }
 
         foreach ($request->file('images') as $index => $file) {
-            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $fileName = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
             $file->move($uploadDir, $fileName);
 
             $product->images()->create([

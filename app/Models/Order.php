@@ -13,7 +13,6 @@ class Order extends Model
         'city',
         'delivery_zone',
         'product_id',
-        'variation_id',
         'selected_size',
         'selected_color',
         'quantity',
@@ -28,10 +27,5 @@ class Order extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variation()
-    {
-        return $this->belongsTo(ProductVariation::class, 'variation_id');
     }
 }

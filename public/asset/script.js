@@ -41,6 +41,8 @@ function updateSummary() {
 function increaseQty() {
     currentQty++;
     document.getElementById('qty').value = toBengaliNum(currentQty);
+    const hidden = document.getElementById('qty_hidden');
+    if (hidden) hidden.value = currentQty;
     updateSummary();
 }
 
@@ -48,6 +50,8 @@ function decreaseQty() {
     if (currentQty > 1) {
         currentQty--;
         document.getElementById('qty').value = toBengaliNum(currentQty);
+        const hidden = document.getElementById('qty_hidden');
+        if (hidden) hidden.value = currentQty;
         updateSummary();
     }
 }
@@ -84,6 +88,53 @@ function selectProduct(element, price) {
     const summaryProdName = document.getElementById('summaryProductName');
     if(prodName && summaryProdName) {
         summaryProdName.textContent = prodName.textContent;
+    }
+    
+    // Dynamically update sizes and colors
+    const sizes = JSON.parse(element.getAttribute('data-sizes') || '[]');
+    const colors = JSON.parse(element.getAttribute('data-colors') || '[]');
+    const images = JSON.parse(element.getAttribute('data-images') || '[]');
+    const desc = element.getAttribute('data-description') || '<p>কোনো বিস্তারিত তথ্য নেই।</p>';
+    
+    // Update Carousel Images
+    const carouselInner = document.getElementById('carousel-inner-container');
+    const carouselIndicators = document.getElementById('carousel-indicators-container');
+    
+    if (carouselInner && carouselIndicators && images.length > 0) {
+        carouselInner.innerHTML = images.map((img, index) => `
+            <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                <img src="${img}" class="d-block w-100 hero-img" alt="Product Image">
+            </div>
+        `).join('');
+
+        carouselIndicators.innerHTML = images.map((img, index) => `
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${index}" class="${index === 0 ? 'active' : ''}" aria-current="${index === 0 ? 'true' : 'false'}" aria-label="Slide ${index + 1}"></button>
+        `).join('');
+    }
+
+    const descContainer = document.getElementById('dynamic-description');
+    if(descContainer) {
+        descContainer.innerHTML = desc;
+    }
+    
+    const sizeContainer = document.getElementById('size-container');
+    if (sizeContainer && sizes.length > 0) {
+        sizeContainer.innerHTML = sizes.map((size, index) => `
+            <label class="size-box ${index === 0 ? 'active' : ''}" onclick="selectSize(this)">
+                <input type="radio" name="selected_size" value="${size}" ${index === 0 ? 'checked' : ''} class="d-none">
+                ${size}
+            </label>
+        `).join('');
+    }
+
+    const colorContainer = document.getElementById('color-container');
+    if (colorContainer && colors.length > 0) {
+        colorContainer.innerHTML = colors.map((color, index) => `
+            <label class="size-box ${index === 0 ? 'active' : ''}" onclick="selectColor(this)">
+                <input type="radio" name="selected_color" value="${color}" ${index === 0 ? 'checked' : ''} class="d-none">
+                ${color}
+            </label>
+        `).join('');
     }
     
     updateSummary();
@@ -155,12 +206,7 @@ function selectDelivery(element, price, text) {
     updateSummary();
 }
 
-// Handle form submission
-document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    alert('Thank you! Your order has been placed successfully.');
-    // Here you would typically send data to server
-});
+// Form submission is now handled by the backend directly
 // Enable swipe and mouse drag support for all carousels
 document.addEventListener('DOMContentLoaded', function() {
     const carousels = document.querySelectorAll('.carousel');

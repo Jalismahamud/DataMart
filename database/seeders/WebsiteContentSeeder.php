@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Product;
-use App\Models\ProductVariation;
 use App\Models\Review;
 use App\Models\SiteSetting;
 use Illuminate\Database\Seeder;
@@ -49,24 +48,17 @@ class WebsiteContentSeeder extends Seeder
             ]
         );
 
-        if ($product->variations()->count() === 0) {
-            $variations = [
-                ['name' => 'ফুল সেট', 'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার', 'size' => '৫০', 'color' => 'কালো', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => true],
-                ['name' => 'ফুল সেট', 'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার', 'size' => '৫২', 'color' => 'মেরুন', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => false],
-                ['name' => 'ফুল সেট', 'short_description' => 'দুই পার্ট কটি বোরকা + হুডি হিজাব ও নিকার', 'size' => '৫৪', 'color' => 'অলিভ', 'price' => 2550, 'regular_price' => 3000, 'discount_price' => 2550, 'is_default' => false],
-            ];
+        if ($product->sizes()->count() === 0) {
+            $sizes = ['৫০', '৫২', '৫৪'];
+            foreach ($sizes as $size) {
+                $product->sizes()->create(['name' => $size]);
+            }
+        }
 
-            foreach ($variations as $variation) {
-                $product->variations()->create([
-                    'name' => $variation['name'],
-                    'short_description' => $variation['short_description'],
-                    'size' => $variation['size'],
-                    'color' => $variation['color'],
-                    'price' => $variation['price'],
-                    'regular_price' => $variation['regular_price'],
-                    'discount_price' => $variation['discount_price'],
-                    'is_default' => $variation['is_default'],
-                ]);
+        if ($product->colors()->count() === 0) {
+            $colors = ['কালো', 'মেরুন', 'অলিভ'];
+            foreach ($colors as $color) {
+                $product->colors()->create(['name' => $color]);
             }
         }
 
