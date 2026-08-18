@@ -32,7 +32,7 @@ class Product extends Model
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
-    public function defaultVariation()
+    public function getDefaultVariation()
     {
         return $this->variations()->where('is_default', true)->first()
             ?? $this->variations()->first();
