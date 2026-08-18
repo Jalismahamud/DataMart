@@ -1,6 +1,9 @@
 @import 'admin-lte/dist/css/adminlte.min.css';
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
+@tailwind components;
+@tailwind utilities;
+
 :root {
     --admin-bg: #f4f6fb;
     --admin-sidebar: #1f2937;
